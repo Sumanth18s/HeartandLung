@@ -100,24 +100,36 @@ def lung_prediction():
     st.write("### Enter Patient Details:")
 
     age = st.number_input("Age", 1, 120)
+    gender = st.selectbox("Gender (1=Male, 0=Female)", [1, 0])
+    air_pollution = st.selectbox("Air Pollution (1=Yes, 0=No)", [1, 0])
+    alcohol_use = st.selectbox("Alcohol Use (1=Yes, 0=No)", [1, 0])
+    dust_allergy = st.selectbox("Dust Allergy (1=Yes, 0=No)", [1, 0])
+    occupational_hazards = st.selectbox("Occupational Hazards (1=Yes, 0=No)", [1, 0])
+    genetic_risk = st.selectbox("Genetic Risk (1=Yes, 0=No)", [1, 0])
+    chronic_lung_disease = st.selectbox("Chronic Lung Disease (1=Yes, 0=No)", [1, 0])
+    balanced_diet = st.selectbox("Balanced Diet (1=Yes, 0=No)", [1, 0])
+    obesity = st.selectbox("Obesity (1=Yes, 0=No)", [1, 0])
     smoking = st.selectbox("Smoking (1=Yes, 0=No)", [1, 0])
-    yellow_fingers = st.selectbox("Yellow Fingers (1=Yes, 0=No)", [1, 0])
-    anxiety = st.selectbox("Anxiety (1=Yes, 0=No)", [1, 0])
-    peer_pressure = st.selectbox("Peer Pressure (1=Yes, 0=No)", [1, 0])
-    chronic_disease = st.selectbox("Chronic Disease (1=Yes, 0=No)", [1, 0])
-    fatigue = st.selectbox("Fatigue (1=Yes, 0=No)", [1, 0])
-    allergy = st.selectbox("Allergy (1=Yes, 0=No)", [1, 0])
-    wheezing = st.selectbox("Wheezing (1=Yes, 0=No)", [1, 0])
-    alcohol = st.selectbox("Alcohol Consuming (1=Yes, 0=No)", [1, 0])
-    coughing = st.selectbox("Coughing (1=Yes, 0=No)", [1, 0])
-    shortness = st.selectbox("Shortness of Breath (1=Yes, 0=No)", [1, 0])
-    swallowing = st.selectbox("Swallowing Difficulty (1=Yes, 0=No)", [1, 0])
+    passive_smoker = st.selectbox("Passive Smoker (1=Yes, 0=No)", [1, 0])
     chest_pain = st.selectbox("Chest Pain (1=Yes, 0=No)", [1, 0])
+    coughing_blood = st.selectbox("Coughing of Blood (1=Yes, 0=No)", [1, 0])
+    fatigue = st.selectbox("Fatigue (1=Yes, 0=No)", [1, 0])
+    weight_loss = st.selectbox("Weight Loss (1=Yes, 0=No)", [1, 0])
+    shortness_breath = st.selectbox("Shortness of Breath (1=Yes, 0=No)", [1, 0])
+    wheezing = st.selectbox("Wheezing (1=Yes, 0=No)", [1, 0])
+    swallowing = st.selectbox("Swallowing Difficulty (1=Yes, 0=No)", [1, 0])
+    clubbing = st.selectbox("Clubbing of Finger Nails (1=Yes, 0=No)", [1, 0])
+    cold = st.selectbox("Frequent Cold (1=Yes, 0=No)", [1, 0])
+    dry_cough = st.selectbox("Dry Cough (1=Yes, 0=No)", [1, 0])
+    snoring = st.selectbox("Snoring (1=Yes, 0=No)", [1, 0])
 
     if st.button("🔍 Predict Lung Disease"):
-        input_data = np.array([[age, smoking, yellow_fingers, anxiety, peer_pressure,
-                                chronic_disease, fatigue, allergy, wheezing, alcohol,
-                                coughing, shortness, swallowing, chest_pain]])
+        input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy,
+                                occupational_hazards, genetic_risk, chronic_lung_disease,
+                                balanced_diet, obesity, smoking, passive_smoker, chest_pain,
+                                coughing_blood, fatigue, weight_loss, shortness_breath,
+                                wheezing, swallowing, clubbing, cold, dry_cough, snoring]])
+        
         scaled = lung_scaler.transform(input_data)
         pred = lung_model.predict(scaled)
 

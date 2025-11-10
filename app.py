@@ -122,13 +122,14 @@ def lung_prediction():
     cold = st.selectbox("Frequent Cold (1=Yes, 0=No)", [1, 0])
     dry_cough = st.selectbox("Dry Cough (1=Yes, 0=No)", [1, 0])
     snoring = st.selectbox("Snoring (1=Yes, 0=No)", [1, 0])
+    level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
 
     if st.button("🔍 Predict Lung Disease"):
         input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy,
                                 occupational_hazards, genetic_risk, chronic_lung_disease,
                                 balanced_diet, obesity, smoking, passive_smoker, chest_pain,
                                 coughing_blood, fatigue, weight_loss, shortness_breath,
-                                wheezing, swallowing, clubbing, cold, dry_cough, snoring]])
+                                wheezing, swallowing, clubbing, cold, dry_cough, snoring, level]])
         
         scaled = lung_scaler.transform(input_data)
         pred = lung_model.predict(scaled)

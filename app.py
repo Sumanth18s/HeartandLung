@@ -151,8 +151,6 @@ else:
 
     if choice == "Heart Disease":
         heart_prediction()
-    elif choice == "Lung Disease":
-        lung_prediction()
     elif choice == "Logout":
         st.session_state.logged_in = False
         st.experimental_rerun()

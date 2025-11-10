@@ -105,7 +105,7 @@ def lung_prediction():
     alcohol_use = st.selectbox("Alcohol Use (1=Yes, 0=No)", [1, 0])
     
     if st.button("🔍 Predict Lung Disease"):
-        input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy]])
+        input_data = np.array([[age, gender, air_pollution, alcohol_use]])
         
         scaled = lung_scaler.transform(input_data)
         pred = lung_model.predict(scaled)

@@ -103,34 +103,9 @@ def lung_prediction():
     gender = st.selectbox("Gender (1=Male, 0=Female)", [1, 0])
     air_pollution = st.selectbox("Air Pollution (1=Yes, 0=No)", [1, 0])
     alcohol_use = st.selectbox("Alcohol Use (1=Yes, 0=No)", [1, 0])
-    dust_allergy = st.selectbox("Dust Allergy (1=Yes, 0=No)", [1, 0])
-    occupational_hazards = st.selectbox("Occupational Hazards (1=Yes, 0=No)", [1, 0])
-    genetic_risk = st.selectbox("Genetic Risk (1=Yes, 0=No)", [1, 0])
-    chronic_lung_disease = st.selectbox("Chronic Lung Disease (1=Yes, 0=No)", [1, 0])
-    balanced_diet = st.selectbox("Balanced Diet (1=Yes, 0=No)", [1, 0])
-    obesity = st.selectbox("Obesity (1=Yes, 0=No)", [1, 0])
-    smoking = st.selectbox("Smoking (1=Yes, 0=No)", [1, 0])
-    passive_smoker = st.selectbox("Passive Smoker (1=Yes, 0=No)", [1, 0])
-    chest_pain = st.selectbox("Chest Pain (1=Yes, 0=No)", [1, 0])
-    coughing_blood = st.selectbox("Coughing of Blood (1=Yes, 0=No)", [1, 0])
-    fatigue = st.selectbox("Fatigue (1=Yes, 0=No)", [1, 0])
-    weight_loss = st.selectbox("Weight Loss (1=Yes, 0=No)", [1, 0])
-    shortness_breath = st.selectbox("Shortness of Breath (1=Yes, 0=No)", [1, 0])
-    wheezing = st.selectbox("Wheezing (1=Yes, 0=No)", [1, 0])
-    swallowing = st.selectbox("Swallowing Difficulty (1=Yes, 0=No)", [1, 0])
-    clubbing = st.selectbox("Clubbing of Finger Nails (1=Yes, 0=No)", [1, 0])
-    cold = st.selectbox("Frequent Cold (1=Yes, 0=No)", [1, 0])
-    dry_cough = st.selectbox("Dry Cough (1=Yes, 0=No)", [1, 0])
-    snoring = st.selectbox("Snoring (1=Yes, 0=No)", [1, 0])
-    level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
-
-
+    
     if st.button("🔍 Predict Lung Disease"):
-        input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy,
-                                occupational_hazards, genetic_risk, chronic_lung_disease,
-                                balanced_diet, obesity, smoking, passive_smoker, chest_pain,
-                                coughing_blood, fatigue, weight_loss, shortness_breath,
-                                wheezing, swallowing, clubbing, cold, dry_cough, snoring, level]])
+        input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy]])
         
         scaled = lung_scaler.transform(input_data)
         pred = lung_model.predict(scaled)

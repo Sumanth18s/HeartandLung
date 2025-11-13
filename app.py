@@ -155,4 +155,4 @@ else:
         lung_prediction()
     elif choice == "Logout":
         st.session_state.logged_in = False
-        st.experimental_rertun()
+        st.experimental_retrun()

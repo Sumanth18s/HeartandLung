@@ -48,21 +48,47 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
+# User authentication data
+# ================================
+if "users" not in st.session_state:
+    st.session_state.users = {}  # {username: password}
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# ================================
+# Helper Functions
+# ================================
+def signup_page():
+    st.title("🆕 Sign Up")
+    username = st.text_input("Create Username")
+    password = st.text_input("Create Password", type="password")
+    if st.button("Sign Up"):
+        if username in st.session_state.users:
+            st.error("❌ Username already exists! Please choose another.")
+        elif username == "" or password == "":
+            st.warning("⚠️ Please fill all fields.")
+        else:
+            st.session_state.users[username] = password
+            st.success("✅ Account created successfully! Please go to Login page.")
+
 def login_page():
-    st.markdown("<h1 class='main-title'>💓 Health and Lungs Prediction Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-title'>Please log in to continue</p>", unsafe_allow_html=True)
-
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("Login")
-
-    if submit:
-        if username == "admin" and password == "1234":
+    st.title("🔐 Login Page")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if username in st.session_state.users and st.session_state.users[username] == password:
             st.session_state.logged_in = True
+            st.session_state.username = username
             st.success("✅ Login successful!")
         else:
-            st.error("❌ Invalid username or password")
+            st.error("❌ Wrong username or password!")
+
+def logout_button():
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.session_state.username = None
+        st.success("👋 Logged out successfully!")
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

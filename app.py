@@ -49,7 +49,7 @@ st.markdown("""
 
 # ------------------ Login System ------------------
 def login_page():
-    st.markdown("<h1 class='main-title'>💓 Health Prediction Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title'>💓 Health and Lungs Prediction Portal</h1>", unsafe_allow_html=True)
     st.markdown("<p class='sub-title'>Please log in to continue</p>", unsafe_allow_html=True)
 
     with st.form("login_form"):
@@ -155,4 +155,4 @@ else:
         lung_prediction()
     elif choice == "Logout":
         st.session_state.logged_in = False
-        st.experimental_rerun()
+        st.experimental_rertun()

@@ -266,4 +266,50 @@ def lung_prediction():
             age = st.slider("Age", 1, 120, 30)
             gender = st.selectbox("Gender", ["Male", "Female"])
             smoking = st.selectbox("Smoking", ["No", "Yes"])
-            passive_smoker = st.selectbox("Passive Smoker",
+            passive_smoker = st.selectbox("Passive Smoker", ["No", "Yes"])
+        with tabs[1]:
+            air_pollution = st.slider("Air Pollution (0-7)", 0, 7, 3)
+            dust_allergy = st.slider("Dust Allergy (0-7)", 0, 7, 2)
+            occupational_hazards = st.slider("Occupational Hazards (0-7)", 0, 7, 2)
+            genetic_risk = st.slider("Genetic Risk (0-7)", 0, 7, 2)
+            chronic_lung_disease = st.selectbox("Chronic Lung Disease", ["No", "Yes"])
+        with tabs[2]:
+            chest_pain = st.slider("Chest Pain (0-7)", 0, 7, 1)
+            fatigue = st.slider("Fatigue (0-7)", 0, 7, 1)
+            shortness_breath = st.slider("Shortness of Breath (0-7)", 0, 7, 1)
+            wheezing = st.slider("Wheezing (0-7)", 0, 7, 1)
+            level = st.selectbox("Level", ["Low", "Medium", "High"])
+        
+        submit = st.form_submit_button("🔍 Predict Lung Disease")
+    
+    if submit:
+        progress = st.progress(0)
+        for i in range(100):
+            progress.progress(i + 1)
+        gender = 1 if gender == "Male" else 2
+        smoking = 1 if smoking == "Yes" else 0
+        passive_smoker = 1 if passive_smoker == "Yes" else 0
+        chronic_lung_disease = 1 if chronic_lung_disease == "Yes" else 0
+        level = {"Low": 0, "Medium": 1, "High": 2}[level]
+        input_data = np.array([[age, gender, air_pollution, 1, dust_allergy, occupational_hazards, genetic_risk, chronic_lung_disease,
+                                5, 2, smoking, passive_smoker, chest_pain, 0, fatigue, 0, shortness_breath,
+                                wheezing, 0, 0, 1, 1, 1, level]])  # Simplified defaults for brevity
+        scaled = lung_scaler.transform(input_data)
+        pred = lung_model.predict(scaled)
+        
+        # Store and Update
+        if "prediction_history" not in st.session_state:
+            st.session_state.prediction_history = []
+        st.session_state.prediction_history.append({
+            "Type": "Lung", "Prediction": "Disease Detected" if pred[0] == 1 else "No Disease",
+            "Date": datetime.now().strftime("%Y-%m-%d %H:%M")
+        })
+        st.session_state.last_pred = "Lung - " + ("Disease" if pred[0] == 1 else "No Disease")
+        
+        if pred[0] == 0:
+            st.success("✅ No Lung Disease Detected!")
+            st.balloons()
+            st.toast("Great! Keep up the healthy habits!", icon="🎉")
+        else:
+            st.error("⚠️ Lung Disease Detected!")
+            st.toast("Consult a doctor immediately!", icon="⚠️")

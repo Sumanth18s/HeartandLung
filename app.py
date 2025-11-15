@@ -138,6 +138,38 @@ def lung_prediction():
             st.success("✅ No Lung Disease Detected!")
         else:
             st.error("⚠️ Lung Disease Detected!")
+# ------------ Prediction Mode ------------
+st.subheader("Prediction")
+
+model_loaded = False
+try:
+    model = joblib.load("lung_model.pkl")
+    model_loaded = True
+except:
+    st.warning("⚠ Model file not found (lung_model.pkl). Using simple rule-based prediction.")
+
+def rule_based_predict(data):
+    score = (
+        data[0][7] +  # chronic
+        data[0][10] + # smoking
+        data[0][12] + # chest pain
+        data[0][15] + # weight loss
+        data[0][16] + # breath
+        data[0][17]   # wheezing
+    )
+
+    if score >= 4:
+        return "High (YES – Lung Disease)"
+    else:
+        return "Low (NO – Healthy)"
+
+if st.button("Predict"):
+    if model_loaded:
+        pred = model.predict(input_data)[0]
+        st.success(f"Prediction: {pred}")
+    else:
+        pred = rule_based_predict(input_data)
+        st.success(f"Prediction: {pred}")
 
 # ------------------ Main App ------------------
 if "logged_in" not in st.session_state:

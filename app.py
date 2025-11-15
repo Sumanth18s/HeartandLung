@@ -48,131 +48,145 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
+import streamlit as st
+import pandas as pd
+import os
+
 # ------------------ User Data Handling ------------------
-# ------------------ Beautiful Login + Signup UI ------------------
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Health & Lungs Portal</title>
+USER_FILE = "users.csv"
 
-<style>
-    body {
-        margin: 0;
-        font-family: "Poppins", sans-serif;
-        background: #0f1117;
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+# Create file if not exists
+if not os.path.exists(USER_FILE):
+    df = pd.DataFrame(columns=["username", "password"])
+    df.to_csv(USER_FILE, index=False)
 
-    .container {
-        width: 420px;
-        padding: 35px;
-        background: #1a1d25;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(255, 0, 128, 0.15);
-        text-align: center;
-    }
 
-    .logo {
-        font-size: 30px;
-        margin-bottom: 10px;
-        color: #ff4da6;
-        font-weight: 600;
-    }
+def save_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    if username in df["username"].values:
+        return False
+    df.loc[len(df)] = [username, password]
+    df.to_csv(USER_FILE, index=False)
+    return True
 
-    .subtitle {
-        font-size: 14px;
-        opacity: 0.8;
-        margin-bottom: 25px;
-    }
 
-    .switch {
-        display: flex;
-        justify-content: center;
-        gap: 25px;
-        margin-bottom: 25px;
-    }
+def validate_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    user = df[(df["username"] == username) & (df["password"] == password)]
+    return not user.empty
 
-    input[type="radio"] {
-        accent-color: #ff4da6;
-        transform: scale(1.2);
-    }
 
-    label {
-        cursor: pointer;
-        font-size: 15px;
-    }
+# ------------------ UI + Login Page ------------------
+def login_page():
 
-    .input-group {
-        margin-bottom: 15px;
-        text-align: left;
-        font-size: 14px;
-    }
+    # Remove default Streamlit padding
+    st.markdown("""
+        <style>
+            body, .stApp {
+                background-color: #0b0f19 !important;
+            }
 
-    .input-group input {
-        width: 100%;
-        padding: 12px;
-        border-radius: 8px;
-        border: none;
-        background: #2a2f3a;
-        color: white;
-        font-size: 15px;
-        outline: none;
-    }
+            /* center everything */
+            .main-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 90vh;
+            }
 
-    .btn {
-        width: 100%;
-        padding: 12px;
-        background: #ff4da6;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        color: white;
-        transition: 0.3s;
-    }
+            /* Title */
+            .title {
+                font-size: 42px;
+                font-weight: 700;
+                color: #ff4b97;
+                text-align: center;
+                margin-bottom: 5px;
+                text-shadow: 0 0 20px rgba(255, 75, 151, 0.6);
+            }
 
-    .btn:hover {
-        background: #ff6ab8;
-    }
-</style>
+            .subtitle {
+                font-size: 16px;
+                color: #b8b8b8;
+                text-align: center;
+                margin-bottom: 25px;
+            }
 
-</head>
-<body>
+            /* Glass card */
+            .glass-card {
+                background: rgba(255, 255, 255, 0.05);
+                padding: 30px;
+                width: 400px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            }
 
-<div class="container">
+            /* Radio button row */
+            .radio-row .stRadio > div {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+            }
 
-    <div class="logo">💗 Health & Lungs Portal</div>
-    <div class="subtitle">Your secure health prediction dashboard</div>
+            /* Buttons */
+            .stButton button {
+                width: 100%;
+                border-radius: 8px;
+                height: 45px;
+                background: #ff4b97 !important;
+                color: white;
+                font-size: 16px;
+                border: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-    <div class="switch">
-        <label><input type="radio" name="mode" checked> Login</label>
-        <label><input type="radio" name="mode"> Sign Up</label>
-    </div>
+    # Center alignment using container
+    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
 
-    <div class="input-group">
-        <label>Username</label>
-        <input type="text" placeholder="Enter username">
-    </div>
+    st.markdown("<div class='title'>💓 Health & Lungs Portal</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitle'>Your secure health prediction dashboard</div>", unsafe_allow_html=True)
 
-    <div class="input-group">
-        <label>Password</label>
-        <input type="password" placeholder="Enter password">
-    </div>
+    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
 
-    <button class="btn">Login</button>
+    # Login / Signup radio
+    with st.container():
+        st.markdown("<div class='radio-row'>", unsafe_allow_html=True)
+        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True, label_visibility="collapsed")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-</div>
+    # -------- LOGIN --------
+    if page == "Login":
+        with st.form("login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Login")
 
-</body>
-</html>
+        if submit:
+            if validate_user(username, password):
+                st.session_state.logged_in = True
+                st.success("✅ Login successful!")
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password")
 
+    # -------- SIGNUP --------
+    else:
+        with st.form("signup_form"):
+            new_user = st.text_input("Choose Username")
+            new_pass = st.text_input("Choose Password", type="password")
+            signup = st.form_submit_button("Sign Up")
+
+        if signup:
+            if save_user(new_user, new_pass):
+                st.success("🎉 Account created successfully! Now login.")
+            else:
+                st.error("⚠️ Username already exists. Try another one.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

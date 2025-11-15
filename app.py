@@ -122,7 +122,7 @@ def lung_prediction():
     freq_cold = st.number_input("Frequent Cold (0-7)", min_value=0, max_value=7, value=1)
     dry_cough = st.number_input("Dry Cough (0-7)", min_value=0, max_value=7, value=1)
     snoring = st.number_input("Snoring (0-7)", min_value=0, max_value=7, value=1)
-     level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
+    level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
 
     
     if st.button("🔍 Predict Lung Disease"):

@@ -89,7 +89,35 @@ def display_hero():
     st.session_state.hero_index = (st.session_state.hero_index + 1) % len(images)
     st.markdown(f"<div class='hero' style='background-image: url({images[st.session_state.hero_index]});'><h1>💓 Advanced Health Prediction Portal</h1></div>", unsafe_allow_html=True)
 
-# ------------------ Login System ------------------
+# ------------------ User Management (Signup/Login) ------------------
+if "users" not in st.session_state:
+    st.session_state.users = {"admin": "1234"}  # Default user for demo
+
+def signup_page():
+    display_hero()
+    st.markdown("<p style='text-align:center; color:#6c757d; font-size:20px;'>Create a New Account</p>", unsafe_allow_html=True)
+
+    with st.form("signup_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            new_username = st.text_input("New Username", placeholder="Choose a username")
+        with col2:
+            new_password = st.text_input("New Password", type="password", placeholder="Choose a password")
+        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm password")
+        submit = st.form_submit_button("📝 Sign Up")
+
+    if submit:
+        if new_username in st.session_state.users:
+            st.error("❌ Username already exists. Try a different one.")
+        elif new_password != confirm_password:
+            st.error("❌ Passwords do not match.")
+        elif len(new_password) < 4:
+            st.error("❌ Password must be at least 4 characters.")
+        else:
+            st.session_state.users[new_username] = new_password
+            st.success("✅ Account created successfully! Please log in.")
+            st.rerun()
+
 def login_page():
     display_hero()
     st.markdown("<p style='text-align:center; color:#6c757d; font-size:20px;'>Secure Login to Access Predictions</p>", unsafe_allow_html=True)
@@ -103,17 +131,18 @@ def login_page():
         submit = st.form_submit_button("🔐 Login")
 
     if submit:
-        correct_username = os.getenv("USERNAME", "admin")
-        correct_password = os.getenv("PASSWORD", "1234")
-        if username == correct_username and password == correct_password:
+        if username in st.session_state.users and st.session_state.users[username] == password:
             st.session_state.logged_in = True
             st.session_state.username = username
             st.success("✅ Login successful!")
             st.rerun()
         else:
-            st.error("❌ Invalid credentials. Try again or contact support.")
+            st.error("❌ Invalid credentials. Try again or sign up.")
 
     st.markdown("[Forgot Password?](mailto:support@example.com) (Placeholder - implement reset logic)")
+    if st.button("Don't have an account? Sign Up"):
+        st.session_state.page = "Signup"
+        st.rerun()
 
 # ------------------ Sidebar with Enhancements ------------------
 def setup_sidebar():
@@ -145,7 +174,7 @@ def setup_sidebar():
             
             choice = st.radio("Choose Page:", ("Dashboard", "Heart Disease", "Lung Disease", "Health Tips", "Help", "Logout"))
         else:
-            choice = "Login"
+            choice = st.radio("Choose Action:", ("Login", "Signup"))
         return choice
 
 # ------------------ Dashboard/Home Page ------------------
@@ -292,24 +321,4 @@ def lung_prediction():
         chronic_lung_disease = 1 if chronic_lung_disease == "Yes" else 0
         level = {"Low": 0, "Medium": 1, "High": 2}[level]
         input_data = np.array([[age, gender, air_pollution, 1, dust_allergy, occupational_hazards, genetic_risk, chronic_lung_disease,
-                                5, 2, smoking, passive_smoker, chest_pain, 0, fatigue, 0, shortness_breath,
-                                wheezing, 0, 0, 1, 1, 1, level]])  # Simplified defaults for brevity
-        scaled = lung_scaler.transform(input_data)
-        pred = lung_model.predict(scaled)
-        
-        # Store and Update
-        if "prediction_history" not in st.session_state:
-            st.session_state.prediction_history = []
-        st.session_state.prediction_history.append({
-            "Type": "Lung", "Prediction": "Disease Detected" if pred[0] == 1 else "No Disease",
-            "Date": datetime.now().strftime("%Y-%m-%d %H:%M")
-        })
-        st.session_state.last_pred = "Lung - " + ("Disease" if pred[0] == 1 else "No Disease")
-        
-        if pred[0] == 0:
-            st.success("✅ No Lung Disease Detected!")
-            st.balloons()
-            st.toast("Great! Keep up the healthy habits!", icon="🎉")
-        else:
-            st.error("⚠️ Lung Disease Detected!")
-            st.toast("Consult a doctor immediately!", icon="⚠️")
+                                5, 2]])

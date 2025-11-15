@@ -104,22 +104,22 @@ def lung_prediction():
     air_pollution = st.slider("Air Pollution", 0, 7)
     alcohol_use = st.slider("Alcohol Use", 0, 7)
     dust_allergy = st.slider("Dust Allergy", 0, 7)
-    occup_hazard = st.slider("Occupational Hazards", 0, 7)
+    occupational_hazards = st.slider("Occupational Hazards", 0, 7)
     genetic_risk = st.slider("Genetic Risk", 0, 7)
-    chronic_lung = st.selectbox("Chronic Lung Disease (0=No, 1=Yes)", [0, 1])
+    chronic_lung_disease = st.selectbox("Chronic Lung Disease (0=No, 1=Yes)", [0, 1])
     balanced_diet = st.slider("Balanced Diet", 0, 7)
     obesity = st.slider("Obesity", 0, 7)
     smoking = st.selectbox("Smoking (0=No, 1=Yes)", [0, 1])
     passive_smoker = st.selectbox("Passive Smoker (0=No, 1=Yes)", [0, 1])
     chest_pain = st.slider("Chest Pain", 0, 7)
-    cough_blood = st.slider("Coughing of Blood", 0, 7)
+    coughing_blood = st.slider("Coughing of Blood", 0, 7)
     fatigue = st.slider("Fatigue", 0, 7)
     weight_loss = st.slider("Weight Loss", 0, 7)
-    short_breath = st.slider("Shortness of Breath", 0, 7)
+    shortness_breath = st.slider("Shortness of Breath", 0, 7)
     wheezing = st.slider("Wheezing", 0, 7)
-    swallow_diff = st.slider("Swallowing Difficulty", 0, 7)
+    swallowing = st.slider("Swallowing Difficulty", 0, 7)
     clubbing = st.slider("Clubbing of Finger Nails", 0, 7)
-    freq_cold = st.slider("Frequent Cold", 0, 7)
+    cold = st.slider("Frequent Cold", 0, 7)
     dry_cough = st.slider("Dry Cough", 0, 7)
     snoring = st.slider("Snoring", 0, 7)
 
@@ -128,7 +128,7 @@ def lung_prediction():
         input_data = np.array([[age, gender, air_pollution, alcohol_use, dust_allergy, occupational_hazards, genetic_risk, chronic_lung_disease,
                                 balanced_diet, obesity, smoking, passive_smoker, chest_pain,
                                 coughing_blood, fatigue, weight_loss, shortness_breath,
-                                wheezing, swallowing, clubbing, cold, dry_cough, snoring, level]])
+                                wheezing, swallowing, clubbing, cold, dry_cough, snoring]])
         
         scaled = lung_scaler.transform(input_data)
         pred = lung_model.predict(scaled)

@@ -48,21 +48,73 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
+# ------------------ User Data Handling ------------------
+import os
+
+USER_FILE = "users.csv"
+
+# Create file if not exists
+if not os.path.exists(USER_FILE):
+    df = pd.DataFrame(columns=["username", "password"])
+    df.to_csv(USER_FILE, index=False)
+
+
+def save_user(username, password):
+    df = pd.read_csv(USER_FILE)
+
+    # Check if user already exists
+    if username in df["username"].values:
+        return False
+
+    df.loc[len(df)] = [username, password]
+    df.to_csv(USER_FILE, index=False)
+    return True
+
+
+def validate_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    user = df[(df["username"] == username) & (df["password"] == password)]
+    return not user.empty
+
+
+# ------------------ Login + Signup Page ------------------
 def login_page():
     st.markdown("<h1 class='main-title'>💓 Health and Lungs Prediction Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-title'>Please log in to continue</p>", unsafe_allow_html=True)
 
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        submit = st.form_submit_button("Login")
+    page = st.radio("Select Option", ["Login", "Sign Up"])
 
-    if submit:
-        if username == "admin" and password == "1234":
-            st.session_state.logged_in = True
-            st.success("✅ Login successful!")
-        else:
-            st.error("❌ Invalid username or password")
+    # -------- LOGIN --------
+    if page == "Login":
+        st.markdown("<p class='sub-title'>Please log in</p>", unsafe_allow_html=True)
+
+        with st.form("login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Login")
+
+        if submit:
+            if validate_user(username, password):
+                st.session_state.logged_in = True
+                st.success("✅ Login successful!")
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password")
+
+    # -------- SIGNUP --------
+    else:
+        st.markdown("<p class='sub-title'>Create a new account</p>", unsafe_allow_html=True)
+
+        with st.form("signup_form"):
+            new_user = st.text_input("Choose Username")
+            new_pass = st.text_input("Choose Password", type="password")
+            signup = st.form_submit_button("Sign Up")
+
+        if signup:
+            if save_user(new_user, new_pass):
+                st.success("🎉 Account created successfully! Now login.")
+            else:
+                st.error("⚠️ Username already exists. Try another one.")
+
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

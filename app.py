@@ -50,96 +50,128 @@ st.markdown("""
 # ------------------ Login System ------------------
 # ------------------ User Data Handling ------------------
 # ------------------ Beautiful Login + Signup UI ------------------
-# ------------------ Login + Signup Page (PRO UI) ------------------
-def login_page():
-    st.markdown("""
-        <style>
-        /* Center the login container */
-        .login-container {
-            max-width: 420px;
-            margin: auto;
-            margin-top: 50px;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 18px;
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.12);
-        }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health & Lungs Portal</title>
 
-        .login-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 800;
-            color: #d63384;
-        }
+<style>
+    body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background: #0f1117;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
 
-        .login-sub {
-            text-align: center;
-            font-size: 16px;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
+    .container {
+        width: 420px;
+        padding: 35px;
+        background: #1a1d25;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(255, 0, 128, 0.15);
+        text-align: center;
+    }
 
-        .stButton>button {
-            width: 100%;
-            border-radius: 12px;
-            padding: 10px;
-            background-color: #d63384 !important;
-            color: white !important;
-            font-size: 18px;
-            border: none;
-        }
-        .stButton>button:hover {
-            background-color: #b02a6b !important;
-        }
+    .logo {
+        font-size: 30px;
+        margin-bottom: 10px;
+        color: #ff4da6;
+        font-weight: 600;
+    }
 
-        .radio-label {
-            text-align:center;
-            padding:10px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    .subtitle {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 25px;
+    }
 
-    st.markdown("<h1 class='login-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='login-sub'>Your secure health prediction dashboard</p>", unsafe_allow_html=True)
+    .switch {
+        display: flex;
+        justify-content: center;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
 
-    # Centered container card
-    with st.container():
-        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
+    input[type="radio"] {
+        accent-color: #ff4da6;
+        transform: scale(1.2);
+    }
 
-        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True)
+    label {
+        cursor: pointer;
+        font-size: 15px;
+    }
 
-        # ---------------- LOGIN ----------------
-        if page == "Login":
-            st.markdown("<p class='login-sub'>Login to continue</p>", unsafe_allow_html=True)
+    .input-group {
+        margin-bottom: 15px;
+        text-align: left;
+        font-size: 14px;
+    }
 
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+    .input-group input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: none;
+        background: #2a2f3a;
+        color: white;
+        font-size: 15px;
+        outline: none;
+    }
 
-            if st.button("Login"):
-                if validate_user(username, password):
-                    st.session_state.logged_in = True
-                    st.success("✅ Logged in successfully!")
-                    st.rerun()
-                else:
-                    st.error("❌ Wrong username or password")
+    .btn {
+        width: 100%;
+        padding: 12px;
+        background: #ff4da6;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        color: white;
+        transition: 0.3s;
+    }
 
-        # ---------------- SIGN UP ----------------
-        else:
-            st.markdown("<p class='login-sub'>Create your account</p>", unsafe_allow_html=True)
+    .btn:hover {
+        background: #ff6ab8;
+    }
+</style>
 
-            new_user = st.text_input("Choose Username")
-            new_pass = st.text_input("Choose Password", type="password")
+</head>
+<body>
 
-            if st.button("Sign Up"):
-                if save_user(new_user, new_pass):
-                    st.success("🎉 Account created! You can now login.")
-                else:
-                    st.error("⚠ Username already taken. Try another one.")
+<div class="container">
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    <div class="logo">💗 Health & Lungs Portal</div>
+    <div class="subtitle">Your secure health prediction dashboard</div>
 
+    <div class="switch">
+        <label><input type="radio" name="mode" checked> Login</label>
+        <label><input type="radio" name="mode"> Sign Up</label>
+    </div>
+
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" placeholder="Enter username">
+    </div>
+
+    <div class="input-group">
+        <label>Password</label>
+        <input type="password" placeholder="Enter password">
+    </div>
+
+    <button class="btn">Login</button>
+
+</div>
+
+</body>
+</html>
 
 
 # ------------------ Heart Disease Prediction ------------------

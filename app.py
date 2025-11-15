@@ -60,16 +60,13 @@ if not os.path.exists(USER_FILE):
     df = pd.DataFrame(columns=["username", "password"])
     df.to_csv(USER_FILE, index=False)
 
-
 def save_user(username, password):
     df = pd.read_csv(USER_FILE)
-
     if username in df["username"].values:
         return False
     df.loc[len(df)] = [username, password]
     df.to_csv(USER_FILE, index=False)
     return True
-
 
 def validate_user(username, password):
     df = pd.read_csv(USER_FILE)
@@ -77,75 +74,67 @@ def validate_user(username, password):
     return not user.empty
 
 
-# ------------------ Password Validation ------------------
-def is_strong_password(password):
-    if len(password) < 8:
+# ------------------ Password Strength Checker ------------------
+def strong_password(pwd):
+    if len(pwd) < 8:
         return False
-    if not re.search(r"[A-Z]", password):
+    if not re.search(r"[A-Z]", pwd):
         return False
-    if not re.search(r"[a-z]", password):
+    if not re.search(r"[a-z]", pwd):
         return False
-    if not re.search(r"[0-9]", password):
+    if not re.search(r"[0-9]", pwd):
         return False
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", pwd):
         return False
     return True
 
 
-# ------------------ Page Design ------------------
-def add_css():
-    st.markdown("""
-    <style>
-        .main-title {
-            font-size: 36px;
-            text-align: center;
-            color: #ffffff;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .card-box {
-            background: #11141b;
-            padding: 30px;
-            width: 60%;
-            margin: auto;
-            border-radius: 12px;
-            border: 1px solid #333;
-            margin-top: 25px;
-        }
-
-        .sub-title {
-            text-align: center;
-            color: #dcdcdc;
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
-
-        .rules-box {
-            background: #1a1d24;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid #444;
-            margin-top: 10px;
-            font-size: 14px;
-            color: #bbbbbb;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-
 # ------------------ Login + Signup Page ------------------
 def login_page():
-    add_css()
 
-    st.markdown("<h1 class='main-title'>💓 Health & Lungs Prediction Portal</h1>", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <style>
+        .center-box {
+            max-width: 450px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            background-color: #1e1e1e;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.08);
+        }
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #bbbbbb;
+        }
+        .rules {
+            font-size: 14px;
+            color: #ff6666;
+            margin-top: 10px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    page = st.radio("", ["Login", "Sign Up"], horizontal=True)
+    st.markdown("<h1 class='title'>💓 Health & Lungs Prediction Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='subtitle'>Your secure health dashboard</p>", unsafe_allow_html=True)
 
-    # ---------------------- LOGIN ----------------------
+    page = st.radio("Select Option", ["Login", "Sign Up"])
+
+    st.markdown("<div class='center-box'>", unsafe_allow_html=True)
+
+    # -------- LOGIN --------
     if page == "Login":
-        st.markdown("<div class='card-box'>", unsafe_allow_html=True)
-        st.markdown("<p class='sub-title'>Login to continue</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align:center;'>Login</h3>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("Username")
@@ -160,40 +149,39 @@ def login_page():
             else:
                 st.error("❌ Invalid username or password")
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # ---------------------- SIGN UP ----------------------
+    # -------- SIGNUP --------
     else:
-        st.markdown("<div class='card-box'>", unsafe_allow_html=True)
-        st.markdown("<p class='sub-title'>Create your new account</p>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align:center;'>Create your new account</h3>", unsafe_allow_html=True)
 
         with st.form("signup_form"):
             new_user = st.text_input("Choose Username")
             new_pass = st.text_input("Choose Password", type="password")
 
-            st.markdown("""
-                <div class="rules-box">
-                    <b>Password must include:</b><br>
-                    ✔ Minimum 8 characters<br>
-                    ✔ At least 1 uppercase letter (A-Z)<br>
-                    ✔ At least 1 lowercase letter (a-z)<br>
-                    ✔ At least 1 number (0-9)<br>
-                    ✔ At least 1 special character (!@#$%^&*)<br>
+            st.markdown(
+                """
+                <div class='rules'>
+                <b>Password must include:</b><br>
+                • Minimum 8 characters<br>
+                • One uppercase letter (A–Z)<br>
+                • One lowercase letter (a–z)<br>
+                • One number (0–9)<br>
+                • One special character (!@#$%^&*)<br>
                 </div>
-            """, unsafe_allow_html=True)
+                """,
+                unsafe_allow_html=True
+            )
 
             signup = st.form_submit_button("Sign Up")
 
         if signup:
-            if not is_strong_password(new_pass):
-                st.error("⚠ Password is weak! Please follow the rules.")
+            if not strong_password(new_pass):
+                st.error("⚠ Password is not strong! Follow all the rules.")
+            elif save_user(new_user, new_pass):
+                st.success("🎉 Account created successfully! Now login.")
             else:
-                if save_user(new_user, new_pass):
-                    st.success("🎉 Account created successfully! Please login.")
-                else:
-                    st.error("⚠ Username already exists. Try a different one.")
+                st.error("⚠ Username already exists. Try another one.")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ------------------ Heart Disease Prediction ------------------

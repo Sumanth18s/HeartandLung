@@ -99,30 +99,30 @@ def lung_prediction():
     st.markdown("<h2 style='text-align:center;color:#0d6efd;'>🫁 Lung Disease Prediction</h2>", unsafe_allow_html=True)
     st.write("### Enter Patient Details:")
 
-    age = st.number_input("Age", 1, 120)
-    gender = st.selectbox("Gender", [1, 2])
-    air_pollution = st.slider("Air Pollution", 0, 7)
-    alcohol_use = st.slider("Alcohol Use", 0, 7)
-    dust_allergy = st.slider("Dust Allergy", 0, 7)
-    occupational_hazards = st.slider("Occupational Hazards", 0, 7)
-    genetic_risk = st.slider("Genetic Risk", 0, 7)
-    chronic_lung_disease = st.selectbox("Chronic Lung Disease (0=No, 1=Yes)", [0, 1])
-    balanced_diet = st.slider("Balanced Diet", 0, 7)
-    obesity = st.slider("Obesity", 0, 7)
-    smoking = st.selectbox("Smoking (0=No, 1=Yes)", [0, 1])
-    passive_smoker = st.selectbox("Passive Smoker (0=No, 1=Yes)", [0, 1])
-    chest_pain = st.slider("Chest Pain", 0, 7)
-    coughing_blood = st.slider("Coughing of Blood", 0, 7)
-    fatigue = st.slider("Fatigue", 0, 7)
-    weight_loss = st.slider("Weight Loss", 0, 7)
-    shortness_breath = st.slider("Shortness of Breath", 0, 7)
-    wheezing = st.slider("Wheezing", 0, 7)
-    swallowing = st.slider("Swallowing Difficulty", 0, 7)
-    clubbing = st.slider("Clubbing of Finger Nails", 0, 7)
-    cold = st.slider("Frequent Cold", 0, 7)
-    dry_cough = st.slider("Dry Cough", 0, 7)
-    snoring = st.slider("Snoring", 0, 7)
-    level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
+    age = st.number_input("Age", min_value=1, max_value=120, value=30)
+    gender = st.number_input("Gender (1=Male, 2=Female)", min_value=1, max_value=2, value=1)
+    air_pollution = st.number_input("Air Pollution (0-7)", min_value=0, max_value=7, value=3)
+    alcohol = st.number_input("Alcohol Use (0-7)", min_value=0, max_value=7, value=1)
+    dust_allergy = st.number_input("Dust Allergy (0-7)", min_value=0, max_value=7, value=2)
+    occup_hazard = st.number_input("Occupational Hazards (0-7)", min_value=0, max_value=7, value=2)
+    genetic_risk = st.number_input("Genetic Risk (0-7)", min_value=0, max_value=7, value=2)
+    chronic_lung = st.number_input("Chronic Lung Disease (0=No, 1=Yes)", min_value=0, max_value=1, value=0)
+    balanced_diet = st.number_input("Balanced Diet (0-7)", min_value=0, max_value=7, value=5)
+    obesity = st.number_input("Obesity (0-7)", min_value=0, max_value=7, value=2)
+    smoking = st.number_input("Smoking (0=No, 1=Yes)", min_value=0, max_value=1, value=0)
+    passive_smoker = st.number_input("Passive Smoker (0=No, 1=Yes)", min_value=0, max_value=1, value=0)
+    chest_pain = st.number_input("Chest Pain (0-7)", min_value=0, max_value=7, value=1)
+    cough_blood = st.number_input("Coughing of Blood (0-7)", min_value=0, max_value=7, value=0)
+    fatigue = st.number_input("Fatigue (0-7)", min_value=0, max_value=7, value=1)
+    weight_loss = st.number_input("Weight Loss (0-7)", min_value=0, max_value=7, value=0)
+    short_breath = st.number_input("Shortness of Breath (0-7)", min_value=0, max_value=7, value=1)
+    wheezing = st.number_input("Wheezing (0-7)", min_value=0, max_value=7, value=1)
+    swallow_diff = st.number_input("Swallowing Difficulty (0-7)", min_value=0, max_value=7, value=0)
+    clubbing = st.number_input("Clubbing of Finger Nails (0-7)", min_value=0, max_value=7, value=0)
+    freq_cold = st.number_input("Frequent Cold (0-7)", min_value=0, max_value=7, value=1)
+    dry_cough = st.number_input("Dry Cough (0-7)", min_value=0, max_value=7, value=1)
+    snoring = st.number_input("Snoring (0-7)", min_value=0, max_value=7, value=1)
+     level = st.selectbox("Level (2=High, 1=Medium, 0=Low",[2, 1, 0])
 
     
     if st.button("🔍 Predict Lung Disease"):
@@ -138,38 +138,6 @@ def lung_prediction():
             st.success("✅ No Lung Disease Detected!")
         else:
             st.error("⚠️ Lung Disease Detected!")
-# ------------ Prediction Mode ------------
-st.subheader("Prediction")
-
-model_loaded = False
-try:
-    model = joblib.load("lung_model.joblib")
-    model_loaded = True
-except:
-    st.warning("⚠ Model file not found (lung_model.pkl). Using simple rule-based prediction.")
-
-def rule_based_predict(data):
-    score = (
-        data[0][7] +  # chronic
-        data[0][10] + # smoking
-        data[0][12] + # chest pain
-        data[0][15] + # weight loss
-        data[0][16] + # breath
-        data[0][17]   # wheezing
-    )
-
-    if score >= 4:
-        return "High (YES – Lung Disease)"
-    else:
-        return "Low (NO – Healthy)"
-
-if st.button("Predict"):
-    if model_loaded:
-        pred = model.predict(input_data)[0]
-        st.success(f"Prediction: {pred}")
-    else:
-        pred = rule_based_predict(input_data)
-        st.success(f"Prediction: {pred}")
 
 # ------------------ Main App ------------------
 if "logged_in" not in st.session_state:

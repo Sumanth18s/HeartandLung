@@ -50,111 +50,95 @@ st.markdown("""
 # ------------------ Login System ------------------
 # ------------------ User Data Handling ------------------
 # ------------------ Beautiful Login + Signup UI ------------------
+# ------------------ Login + Signup Page (PRO UI) ------------------
 def login_page():
-    st.markdown(
-        """
+    st.markdown("""
         <style>
-        body {
-            background-color: #f2f4f7;
-        }
-
-        .auth-card {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            width: 420px;
+        /* Center the login container */
+        .login-container {
+            max-width: 420px;
             margin: auto;
-            margin-top: 40px;
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.12);
+            margin-top: 50px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.12);
         }
 
-        .title {
+        .login-title {
             text-align: center;
             font-size: 32px;
-            font-weight: 700;
+            font-weight: 800;
             color: #d63384;
-            margin-bottom: 10px;
         }
 
-        .subtitle {
+        .login-sub {
             text-align: center;
-            color: #6c757d;
             font-size: 16px;
-            margin-bottom: 25px;
+            color: #6c757d;
+            margin-bottom: 15px;
         }
 
         .stButton>button {
             width: 100%;
+            border-radius: 12px;
+            padding: 10px;
             background-color: #d63384 !important;
             color: white !important;
-            padding: 10px;
-            border-radius: 10px;
             font-size: 18px;
             border: none;
         }
-
         .stButton>button:hover {
             background-color: #b02a6b !important;
-            color: white;
         }
 
-        .radio-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
+        .radio-label {
+            text-align:center;
+            padding:10px;
+            font-size: 18px;
+            font-weight: 600;
         }
         </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
 
-    st.markdown("<h1 class='title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='subtitle'>Access disease prediction dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='login-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='login-sub'>Your secure health prediction dashboard</p>", unsafe_allow_html=True)
 
-    # Switch between login and signup
-    st.markdown("<div class='radio-container'>", unsafe_allow_html=True)
-    page = st.radio("", ["Login", "Sign Up"], horizontal=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    # Centered container card
+    with st.container():
+        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
 
-    # ------------ LOGIN UI -----------
-    if page == "Login":
-        with st.container():
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.subheader("🔐 Login to Continue")
+        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True)
 
-            with st.form("login_form"):
-                username = st.text_input("Username")
-                password = st.text_input("Password", type="password")
-                submit = st.form_submit_button("Login")
+        # ---------------- LOGIN ----------------
+        if page == "Login":
+            st.markdown("<p class='login-sub'>Login to continue</p>", unsafe_allow_html=True)
 
-            if submit:
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+
+            if st.button("Login"):
                 if validate_user(username, password):
                     st.session_state.logged_in = True
-                    st.success("✅ Login successful!")
+                    st.success("✅ Logged in successfully!")
                     st.rerun()
                 else:
-                    st.error("❌ Invalid username or password")
+                    st.error("❌ Wrong username or password")
 
-            st.markdown("</div>", unsafe_allow_html=True)
+        # ---------------- SIGN UP ----------------
+        else:
+            st.markdown("<p class='login-sub'>Create your account</p>", unsafe_allow_html=True)
 
-    # ------------ SIGNUP UI -----------
-    else:
-        with st.container():
-            st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-            st.subheader("📝 Create a New Account")
+            new_user = st.text_input("Choose Username")
+            new_pass = st.text_input("Choose Password", type="password")
 
-            with st.form("signup_form"):
-                new_user = st.text_input("Choose Username")
-                new_pass = st.text_input("Choose Password", type="password")
-                signup = st.form_submit_button("Create Account")
-
-            if signup:
+            if st.button("Sign Up"):
                 if save_user(new_user, new_pass):
-                    st.success("🎉 Account created successfully! You can login now.")
+                    st.success("🎉 Account created! You can now login.")
                 else:
-                    st.error("⚠️ Username already exists!")
+                    st.error("⚠ Username already taken. Try another one.")
 
-            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 

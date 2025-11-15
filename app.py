@@ -2,7 +2,6 @@ import streamlit as st
 import joblib
 import numpy as np
 import pandas as pd
-import os
 
 # ------------------ Load Models & Scalers ------------------
 heart_model = joblib.load("hearts_model.joblib")
@@ -49,95 +48,21 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
-
-# -----------------------------------------------------
-# Create users.csv if it doesn't exist
-# -----------------------------------------------------
-USER_DB = "users.csv"
-
-if not os.path.exists(USER_DB):
-    df = pd.DataFrame(columns=["username", "password"])
-    df.to_csv(USER_DB, index=False)
-
-# -----------------------------------------------------
-# Save Signup Data
-# -----------------------------------------------------
-def save_user(username, password):
-    df = pd.read_csv(USER_DB)
-
-    # check if username already exists
-    if username in df["username"].values:
-        return False
-
-    # insert new user
-    df.loc[len(df)] = [username, password]
-    df.to_csv(USER_DB, index=False)
-    return True
-
-# -----------------------------------------------------
-# Validate Login
-# -----------------------------------------------------
-def validate_login(username, password):
-    df = pd.read_csv(USER_DB)
-    return ((df["username"] == username) & (df["password"] == password)).any()
-
-# -----------------------------------------------------
-# Signup Page
-# -----------------------------------------------------
-def signup_page():
-    st.title("🔐 Create Account")
-
-    username = st.text_input("Choose Username")
-    password = st.text_input("Choose Password", type="password")
-    confirm = st.text_input("Confirm Password", type="password")
-
-    if st.button("Sign Up"):
-        if password != confirm:
-            st.error("❌ Passwords do not match!")
-        else:
-            if save_user(username, password):
-                st.success("✅ Account created successfully! You can login now.")
-            else:
-                st.error("❌ Username already exists!")
-
-# -----------------------------------------------------
-# Login Page
-# -----------------------------------------------------
 def login_page():
-    st.title("🔑 Login")
+    st.markdown("<h1 class='main-title'>💓 Health and Lungs Prediction Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-title'>Please log in to continue</p>", unsafe_allow_html=True)
 
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("Login")
 
-    if st.button("Login"):
-        if validate_login(username, password):
-            st.success("🎉 Login Successful!")
+    if submit:
+        if username == "admin" and password == "1234":
             st.session_state.logged_in = True
+            st.success("✅ Login successful!")
         else:
             st.error("❌ Invalid username or password")
-
-    if st.button("Create New Account"):
-        st.session_state.signup = True
-
-# -----------------------------------------------------
-# Main App Logic
-# -----------------------------------------------------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "signup" not in st.session_state:
-    st.session_state.signup = False
-
-if st.session_state.logged_in:
-    st.title("🎉 Welcome! You are logged in.")
-
-    if st.button("Logout"):
-        st.session_state.logged_in = False
-        st.experimental_rerun()
-
-elif st.session_state.signup:
-    signup_page()
-else:
-    login_page()
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

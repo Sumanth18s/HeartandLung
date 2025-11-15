@@ -48,7 +48,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
-# ------------------ GLOBAL PAGE STYLE ------------------
 import streamlit as st
 import pandas as pd
 import os
@@ -57,7 +56,7 @@ import re
 # ------------------ User Data Handling ------------------
 USER_FILE = "users.csv"
 
-# Create CSV if it doesn't exist
+# Create users.csv if not exists
 if not os.path.exists(USER_FILE):
     df = pd.DataFrame(columns=["username", "password"])
     df.to_csv(USER_FILE, index=False)
@@ -66,7 +65,6 @@ if not os.path.exists(USER_FILE):
 def save_user(username, password):
     df = pd.read_csv(USER_FILE)
 
-    # Check if username exists
     if username in df["username"].values:
         return False
 
@@ -81,93 +79,95 @@ def validate_user(username, password):
     return not user.empty
 
 
-# ----------------- Password Strength Validation -----------------
+# ------------------ Password Validation ------------------
 def is_strong_password(password):
-    if len(password) < 8:
-        return "Password must be at least 8 characters long."
+    """
+    Rules:
+    - Min 8 characters
+    - At least 1 uppercase
+    - At least 1 lowercase
+    - At least 1 digit
+    - At least 1 special character
+    """
 
-    if not re.search(r"[A-Z]", password):
-        return "Password must contain at least one uppercase letter."
+    rules = {
+        "At least 8 characters": len(password) >= 8,
+        "Contains uppercase letter": bool(re.search(r"[A-Z]", password)),
+        "Contains lowercase letter": bool(re.search(r"[a-z]", password)),
+        "Contains number": bool(re.search(r"[0-9]", password)),
+        "Contains special character (!@#$% etc.)": bool(re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)),
+    }
 
-    if not re.search(r"[a-z]", password):
-        return "Password must contain at least one lowercase letter."
-
-    if not re.search(r"[0-9]", password):
-        return "Password must contain at least one number."
-
-    if not re.search(r"[!@#$%^&*()_+=\-{}\[\]:;\"'?/><.,]", password):
-        return "Password must contain at least one special character."
-
-    return "OK"
-
-
-# ------------------ UI Styling ------------------
-def apply_css():
-    st.markdown("""
-        <style>
-            .main-title {
-                font-size: 38px;
-                text-align: center;
-                font-weight: 700;
-                margin-bottom: 10px;
-                color: #ff4b4b;
-            }
-            .sub-title {
-                text-align: center;
-                font-size: 20px;
-                opacity: 0.9;
-                margin-top: -10px;
-                margin-bottom: 30px;
-            }
-            .stTextInput>div>div>input {
-                background-color: #2b2b2b;
-                color: white;
-            }
-            .center-box {
-                max-width: 450px;
-                margin: auto;
-                padding: 25px;
-                background: #1e1e1e;
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(255, 0, 80, 0.3);
-            }
-        </style>
-    """, unsafe_allow_html=True)
+    return all(rules.values()), rules
 
 
 # ------------------ Login + Signup Page ------------------
 def login_page():
-
-    apply_css()
+    st.markdown("""
+        <style>
+            .main-title { 
+                text-align:center; 
+                font-size:40px; 
+                font-weight:700; 
+                color:#ff4b4b;
+                margin-bottom: 10px;
+            }
+            .form-box {
+                background-color:#1e1e1e;
+                padding:25px;
+                border-radius:12px;
+                width:60%;
+                margin:auto;
+                box-shadow:0 0 10px rgba(255, 0, 0, 0.3);
+            }
+            .sub-title{
+                text-align:center;
+                color:#dcdcdc;
+                font-size:20px;
+                margin-bottom: 20px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
     st.markdown("<h1 class='main-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-title'>Secure Health Prediction Dashboard</p>", unsafe_allow_html=True)
 
     page = st.radio("", ["Login", "Sign Up"], horizontal=True)
 
-    # -------- LOGIN --------
+    # ---------------- LOGIN ----------------
     if page == "Login":
-        st.markdown("<div class='center-box'>", unsafe_allow_html=True)
+        st.markdown("<p class='sub-title'>Login to continue</p>", unsafe_allow_html=True)
 
-        with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login")
+        with st.container():
+            st.markdown("<div class='form-box'>", unsafe_allow_html=True)
 
-        if submit:
-            if validate_user(username, password):
-                st.session_state.logged_in = True
-                st.success("✅ Login successful!")
-                st.rerun()
-            else:
-                st.error("❌ Invalid username or password")
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submit = st.form_submit_button("Login")
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            if submit:
+                if validate_user(username, password):
+                    st.session_state.logged_in = True
+                    st.success("✅ Login successful!")
+                    st.rerun()
+                else:
+                    st.error("❌ Invalid username or password")
 
-    # -------- SIGNUP --------
+            st.markdown("</div>", unsafe_allow_html=True)
+
+    # ---------------- SIGN UP ----------------
     else:
-        st.markdown("<div class='center-box'>", unsafe_allow_html=True)
         st.markdown("<p class='sub-title'>Create your new account</p>", unsafe_allow_html=True)
+
+        st.markdown("<div class='form-box'>", unsafe_allow_html=True)
+
+        st.write("### 🔐 Password Rules")
+        st.markdown("""
+            - Minimum **8 characters**  
+            - Must include **uppercase & lowercase letters**  
+            - Must include **numbers**  
+            - Must include **special characters** (! @ # $ % etc.)  
+        """)
 
         with st.form("signup_form"):
             new_user = st.text_input("Choose Username")
@@ -175,18 +175,21 @@ def login_page():
             signup = st.form_submit_button("Sign Up")
 
         if signup:
-            validation = is_strong_password(new_pass)
+            valid, rule_results = is_strong_password(new_pass)
 
-            if validation != "OK":
-                st.error("⚠️ " + validation)
+            # Show rule checks
+            for rule, passed in rule_results.items():
+                st.write(f"{'✔️' if passed else '❌'} {rule}")
+
+            if not valid:
+                st.error("⚠️ Password does NOT meet the required rules. Please fix the above issues.")
             else:
                 if save_user(new_user, new_pass):
                     st.success("🎉 Account created successfully! Now login.")
                 else:
-                    st.error("⚠️ Username already exists.")
+                    st.error("⚠️ Username already exists. Try another one.")
 
         st.markdown("</div>", unsafe_allow_html=True)
-
 
 
 # ------------------ Heart Disease Prediction ------------------

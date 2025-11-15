@@ -48,124 +48,128 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
+import streamlit as st
+import pandas as pd
+import os
 import re
 
-# ------------------ Login + Signup Page (Improved UI) ------------------
+# -------------------- USER DATA HANDLING --------------------
+USER_FILE = "users.csv"
+
+# Create file if not exists
+if not os.path.exists(USER_FILE):
+    df = pd.DataFrame(columns=["username", "password"])
+    df.to_csv(USER_FILE, index=False)
+
+
+def save_user(username, password):
+    df = pd.read_csv(USER_FILE)
+
+    # Check if username exists
+    if username in df["username"].values:
+        return False
+
+    df.loc[len(df)] = [username, password]
+    df.to_csv(USER_FILE, index=False)
+    return True
+
+
+def validate_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    user = df[(df["username"] == username) & (df["password"] == password)]
+    return not user.empty
+
+
+# -------------------- PASSWORD VALIDATION --------------------
+def check_password_rules(password):
+    return {
+        "has_upper": bool(re.search(r"[A-Z]", password)),
+        "has_lower": bool(re.search(r"[a-z]", password)),
+        "has_digit": bool(re.search(r"\d", password)),
+        "has_special": bool(re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)),
+        "len_ok": 4 <= len(password) <= 8
+    }
+
+
+# -------------------- LOGIN + SIGNUP PAGE --------------------
 def login_page():
-    # Card CSS for a centered container
+
     st.markdown("""
-    <style>
-    .auth-card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-        border: 1px solid rgba(255,255,255,0.03);
-        border-radius: 12px;
-        padding: 28px;
-        box-shadow: 0 6px 30px rgba(0,0,0,0.6);
-    }
-    .auth-title {
-        text-align: center;
-        font-size: 34px;
-        font-weight: 800;
-        margin-bottom: 6px;
-        color: #ff6b8a;
-    }
-    .auth-sub {
-        text-align: center;
-        color: #9aa0a6;
-        margin-bottom: 18px;
-    }
-    .small-note {
-        color: #9aa0a6;
-        font-size: 13px;
-    }
-    .rules {
-        background: rgba(255,255,255,0.02);
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid rgba(255,255,255,0.02);
-        color: #cbd5e1;
-        font-size: 14px;
-        margin-top: 12px;
-    }
-    .ok { color: #2ecc71; font-weight: 600; }
-    .bad { color: #ff6b6b; font-weight: 600; }
-    </style>
+        <style>
+        .title { text-align:center; font-size:40px; font-weight:700; margin-bottom:10px; }
+        .container {
+            margin:auto;
+            width:40%;
+            padding:30px;
+            background:#1e1e1e;
+            border-radius:15px;
+            box-shadow:0px 0px 15px rgba(255,255,255,0.07);
+        }
+        .rules {
+            background:#111;
+            padding:12px;
+            margin-top:10px;
+            border-radius:10px;
+            border:1px solid #333;
+        }
+        </style>
     """, unsafe_allow_html=True)
 
-    # page layout: center the card using columns
-    left, mid, right = st.columns([1, 2, 1])
-    with mid:
-        st.markdown("<div class='auth-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='auth-title'>💓 Health & Lungs Prediction Portal</div>", unsafe_allow_html=True)
-        st.markdown("<div class='auth-sub'>Secure access — sign up or login to continue</div>", unsafe_allow_html=True)
+    st.markdown("<div class='title'>💓 Health & Lungs Prediction Portal</div>", unsafe_allow_html=True)
 
-        # radio to choose login / signup
-        mode = st.radio("", ["Login", "Sign Up"], horizontal=True)
+    page = st.radio("Select Option", ["Login", "Sign Up"])
 
-        # -------- LOGIN --------
-        if mode == "Login":
-            with st.form("login_form"):
-                username = st.text_input("Username", help="Enter your username")
-                password = st.text_input("Password", type="password", help="Enter your password")
-                submitted = st.form_submit_button("Login", use_container_width=True)
+    st.markdown("<div class='container'>", unsafe_allow_html=True)
 
-            if submitted:
-                if not username or not password:
-                    st.error("Please provide both username and password.")
-                elif validate_user(username, password):
-                    st.session_state.logged_in = True
-                    st.success("✅ Login successful!")
-                    st.experimental_rerun()
-                else:
-                    st.error("❌ Invalid username or password")
+    # ---------------------- LOGIN ----------------------
+    if page == "Login":
+        st.markdown("### Login to Continue")
 
-        # -------- SIGNUP --------
-        else:
-            with st.form("signup_form"):
-                new_user = st.text_input("Choose Username", help="Pick a unique username")
-                new_pass = st.text_input("Choose Password", type="password", help="Password must follow the rules shown below")
-                signup = st.form_submit_button("Sign Up", use_container_width=True)
+        with st.form("login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submit = st.form_submit_button("Login")
 
-            # live validation checks for rules
-            def pw_checks(pw):
-                checks = {
-                    "has_upper": bool(re.search(r"[A-Z]", pw)),
-                    "has_lower": bool(re.search(r"[a-z]", pw)),
-                    "has_digit": bool(re.search(r"\d", pw)),
-                    "has_special": bool(re.search(r"[!@#$%^&*(),.?\":{}|<>\\/~`[\];'-_=+]", pw)),
-                    "len_ok": (4 <= len(pw) <= 8)  # change min length if you want
-                }
-                return checks
+        if submit:
+            if validate_user(username, password):
+                st.session_state.logged_in = True
+                st.success("✅ Login successful!")
+                st.rerun()
+            else:
+                st.error("❌ Invalid username or password")
 
-            checks = pw_checks(new_pass)
+    # ---------------------- SIGN UP ----------------------
+    else:
+        st.markdown("### Create your new account")
 
-            # show the rules block
+        with st.form("signup_form"):
+            new_user = st.text_input("Choose Username")
+            new_pass = st.text_input("Choose Password", type="password")
+
+            checks = check_password_rules(new_pass)
+
+            # Show password rules block
             st.markdown("<div class='rules'>", unsafe_allow_html=True)
-            st.markdown("**Password rules:**")
+            st.markdown("**Password must include:**")
             st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Uppercase letter (A-Z)")
             st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Lowercase letter (a-z)")
             st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Digit (0-9)")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special character (e.g. !@#$%)")
-            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length between 4 and 8 characters (max 8)")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special character (!@#$%)")
+            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length 4–8 characters")
             st.markdown("</div>", unsafe_allow_html=True)
 
-            if signup:
-                # basic sanity checks
-                if not new_user or not new_pass:
-                    st.error("Please enter both username and password.")
+            signup = st.form_submit_button("Sign Up")
+
+        if signup:
+            if not all(checks.values()):
+                st.error("❌ Password does not meet the required rules.")
+            else:
+                if save_user(new_user, new_pass):
+                    st.success("🎉 Account created successfully! Now login.")
                 else:
-                    # validate password rules
-                    if all(checks.values()):
-                        created = save_user(new_user, new_pass)
-                        if created:
-                            st.success("🎉 Account created successfully! You can now login.")
-                        else:
-                            st.error("⚠️ Username already exists. Choose another username.")
-                    else:
-                        st.error("Password doesn't satisfy all rules. Please follow the rules shown above.")
+                    st.error("⚠️ Username already exists. Try another one.")
 
-        st.markdown("</div>", unsafe_allow_html=True)  # close auth-card
-
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ------------------ Heart Disease Prediction ------------------

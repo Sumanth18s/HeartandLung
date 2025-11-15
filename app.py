@@ -3,322 +3,232 @@ import joblib
 import numpy as np
 import pandas as pd
 import os
-from datetime import datetime
-import plotly.express as px  # For advanced charts
-import requests  # For image fetching (optional)
 
-# ------------------ Load Models & Scalers with Caching ------------------
-@st.cache_resource
-def load_models():
-    try:
-        heart_model = joblib.load("hearts_model.joblib")
-        heart_scaler = joblib.load("hearts_scaler.joblib")
-        lung_model = joblib.load("lungs_model.joblib")
-        lung_scaler = joblib.load("lungs_scaler.joblib")
-        return heart_model, heart_scaler, lung_model, lung_scaler
-    except FileNotFoundError:
-        st.error("Model files not found. Please ensure 'hearts_model.joblib', 'hearts_scaler.joblib', 'lungs_model.joblib', and 'lungs_scaler.joblib' are in the directory.")
-        st.stop()
+# -----------------------------------------------------------
+# Load Models
+# -----------------------------------------------------------
+heart_model = joblib.load("hearts_model.joblib")
+heart_scaler = joblib.load("hearts_scaler.joblib")
 
-heart_model, heart_scaler, lung_model, lung_scaler = load_models()
+lung_model = joblib.load("lungs_model.joblib")
+lung_scaler = joblib.load("lungs_scaler.joblib")
 
-# ------------------ Page Config ------------------
-st.set_page_config(
-    page_title="Advanced Health Prediction System",
-    page_icon="💓",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# -----------------------------------------------------------
+# App Config
+# -----------------------------------------------------------
+st.set_page_config(page_title="Health Prediction System", page_icon="💓", layout="wide")
 
-# ------------------ Theme Management ------------------
-if "theme" not in st.session_state:
-    st.session_state.theme = "light"
+# -----------------------------------------------------------
+# Load / Create User Database
+# -----------------------------------------------------------
+USER_DB = "users.csv"
+if not os.path.exists(USER_DB):
+    pd.DataFrame(columns=["username", "password"]).to_csv(USER_DB, index=False)
 
-def apply_theme():
-    if st.session_state.theme == "dark":
-        return """
-        body { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; }
-        .card { background: #34495e; color: white; }
-        .hero { color: white; }
-        """
-    else:
-        return """
-        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: black; }
-        .card { background: white; color: black; }
-        """
+def save_user(username, password):
+    df = pd.read_csv(USER_DB)
+    if username in df["username"].values:
+        return False
+    df.loc[len(df)] = [username, password]
+    df.to_csv(USER_DB, index=False)
+    return True
 
-st.markdown(f"<style>{apply_theme()}</style>", unsafe_allow_html=True)
+def validate_login(username, password):
+    df = pd.read_csv(USER_DB)
+    return ((df["username"] == username) & (df["password"] == password)).any()
 
-# ------------------ Custom CSS for Enhanced UI ------------------
+# -----------------------------------------------------------
+# CSS Styling
+# -----------------------------------------------------------
 st.markdown("""
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-    body { font-family: 'Roboto', sans-serif; }
-    .hero { background-size: cover; height: 300px; border-radius: 15px; display: flex; align-items: center; justify-content: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 20px; animation: slideIn 1s ease-out; }
-    @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-    .card { border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); padding: 20px; margin: 10px 0; transition: all 0.3s; animation: fadeIn 0.5s ease-in; }
-    .card:hover { transform: scale(1.02); box-shadow: 0 12px 24px rgba(0,0,0,0.3); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .pulse { animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-    .footer { text-align: center; color: #6c757d; font-size: 14px; margin-top: 50px; padding: 20px; background: #f8f9fa; border-radius: 10px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .banner-img {
+        width: 100%;
+        border-radius: 15px;
+        margin-bottom: 20px;
+    }
+    .title-main {
+        text-align: center;
+        font-size: 45px;
+        font-weight: bold;
+        color: #d63384;
+    }
+    .sub-title {
+        text-align: center;
+        font-size: 20px;
+        color: #6c757d;
+        margin-bottom: 30px;
+    }
+    .card {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .stButton>button {
+        background-color: #d63384;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        border: none;
+        font-size: 18px;
+    }
+    .stButton>button:hover {
+        background-color: #b02a6b;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# ------------------ Disclaimer ------------------
-st.markdown("""
-    <div style='text-align: center; color: #6c757d; font-size: 14px; margin-bottom: 20px; background: #fff3cd; padding: 10px; border-radius: 5px;'>
-    ⚠️ <strong>Disclaimer:</strong> This app provides predictions based on machine learning models and is for informational purposes only. It is not a substitute for professional medical advice. Always consult a healthcare provider for diagnosis and treatment.
-    </div>
-""", unsafe_allow_html=True)
-
-# ------------------ Utility Functions ------------------
-@st.cache_data
-def get_image_urls():
-    return [
-        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80",
-        "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80"
-    ]
-
-def display_hero():
-    images = get_image_urls()
-    if "hero_index" not in st.session_state:
-        st.session_state.hero_index = 0
-    st.session_state.hero_index = (st.session_state.hero_index + 1) % len(images)
-    st.markdown(f"<div class='hero' style='background-image: url({images[st.session_state.hero_index]});'><h1>💓 Advanced Health Prediction Portal</h1></div>", unsafe_allow_html=True)
-
-# ------------------ User Management (Signup/Login) ------------------
-if "users" not in st.session_state:
-    st.session_state.users = {"admin": "1234"}  # Default user for demo
-
+# -----------------------------------------------------------
+# Signup Page
+# -----------------------------------------------------------
 def signup_page():
-    display_hero()
-    st.markdown("<p style='text-align:center; color:#6c757d; font-size:20px;'>Create a New Account</p>", unsafe_allow_html=True)
+    st.image("assets/banner_health.jpg", use_column_width=True, caption="Health Prediction System")
+
+    st.markdown("<h1 class='title-main'>Create an Account</h1>", unsafe_allow_html=True)
 
     with st.form("signup_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            new_username = st.text_input("New Username", placeholder="Choose a username")
-        with col2:
-            new_password = st.text_input("New Password", type="password", placeholder="Choose a password")
-        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Confirm password")
-        submit = st.form_submit_button("📝 Sign Up")
+        username = st.text_input("Choose Username")
+        password = st.text_input("Choose Password", type="password")
+        confirm = st.text_input("Confirm Password", type="password")
+        submit = st.form_submit_button("Sign Up")
 
     if submit:
-        if new_username in st.session_state.users:
-            st.error("❌ Username already exists. Try a different one.")
-        elif new_password != confirm_password:
-            st.error("❌ Passwords do not match.")
-        elif len(new_password) < 4:
-            st.error("❌ Password must be at least 4 characters.")
+        if password != confirm:
+            st.error("❌ Passwords do not match!")
         else:
-            st.session_state.users[new_username] = new_password
-            st.success("✅ Account created successfully! Please log in.")
-            st.rerun()
+            if save_user(username, password):
+                st.success("✅ Account created successfully! Go to Login page.")
+            else:
+                st.error("❌ Username already exists!")
 
+# -----------------------------------------------------------
+# Login Page
+# -----------------------------------------------------------
 def login_page():
-    display_hero()
-    st.markdown("<p style='text-align:center; color:#6c757d; font-size:20px;'>Secure Login to Access Predictions</p>", unsafe_allow_html=True)
+    st.image("assets/banner_health.jpg", use_column_width=True)
+
+    st.markdown("<h1 class='title-main'>Welcome to Health Prediction Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-title'>Login to continue</p>", unsafe_allow_html=True)
 
     with st.form("login_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            username = st.text_input("Username", placeholder="Enter username")
-        with col2:
-            password = st.text_input("Password", type="password", placeholder="Enter password")
-        submit = st.form_submit_button("🔐 Login")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Login")
 
-    if submit:
-        if username in st.session_state.users and st.session_state.users[username] == password:
+    if submitted:
+        if validate_login(username, password):
             st.session_state.logged_in = True
-            st.session_state.username = username
-            st.success("✅ Login successful!")
-            st.rerun()
+            st.success("🎉 Login Successful!")
         else:
-            st.error("❌ Invalid credentials. Try again or sign up.")
+            st.error("❌ Incorrect Username or Password!")
 
-    st.markdown("[Forgot Password?](mailto:support@example.com) (Placeholder - implement reset logic)")
-    if st.button("Don't have an account? Sign Up"):
-        st.session_state.page = "Signup"
-        st.rerun()
+    if st.button("Create New Account"):
+        st.session_state.signup = True
 
-# ------------------ Sidebar with Enhancements ------------------
-def setup_sidebar():
-    with st.sidebar:
-        st.title("🩺 Navigation")
-        if st.session_state.logged_in:
-            # User Profile
-            if "user_profile" not in st.session_state:
-                st.session_state.user_profile = {"name": "User", "age": 30, "avatar": "https://via.placeholder.com/100"}
-            st.image(st.session_state.user_profile["avatar"], width=80, caption=st.session_state.user_profile["name"])
-            if st.button("Edit Profile"):
-                with st.form("profile_form"):
-                    name = st.text_input("Name", value=st.session_state.user_profile["name"])
-                    age = st.number_input("Age", 1, 120, value=st.session_state.user_profile["age"])
-                    avatar = st.text_input("Avatar URL", value=st.session_state.user_profile["avatar"])
-                    save = st.form_submit_button("Save")
-                    if save:
-                        st.session_state.user_profile = {"name": name, "age": age, "avatar": avatar}
-                        st.success("Profile updated!")
-            
-            # Theme Toggle
-            theme_toggle = st.toggle("Dark Mode", value=(st.session_state.theme == "dark"))
-            if theme_toggle != (st.session_state.theme == "dark"):
-                st.session_state.theme = "dark" if theme_toggle else "light"
-                st.rerun()
-            
-            # Live Clock
-            st.write(f"🕒 {datetime.now().strftime('%H:%M:%S')}")
-            
-            choice = st.radio("Choose Page:", ("Dashboard", "Heart Disease", "Lung Disease", "Health Tips", "Help", "Logout"))
-        else:
-            choice = st.radio("Choose Action:", ("Login", "Signup"))
-        return choice
-
-# ------------------ Dashboard/Home Page ------------------
-def dashboard():
-    st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#d63384;'>🏠 Your Health Dashboard</h2>", unsafe_allow_html=True)
-    
-    # Stats Grid
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Predictions", len(st.session_state.get("prediction_history", [])))
-    with col2:
-        st.metric("Health Score", "85%")  # Placeholder - calculate based on history
-    with col3:
-        st.metric("Last Prediction", st.session_state.get("last_pred", "None"))
-    
-    # Interactive Chart
-    if "prediction_history" in st.session_state and st.session_state.prediction_history:
-        df = pd.DataFrame(st.session_state.prediction_history)
-        fig = px.line(df, x="Date", y="Prediction", title="Prediction Timeline")
-        st.plotly_chart(fig)
-    
-    # Quick Actions in Grid
-    st.subheader("Quick Actions")
-    with st.container():
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if st.button("❤️ Heart Prediction"):
-                st.session_state.page = "Heart Disease"
-                st.rerun()
-        with col2:
-            if st.button("🫁 Lung Prediction"):
-                st.session_state.page = "Lung Disease"
-                st.rerun()
-        with col3:
-            if st.button("💡 Health Tips"):
-                st.session_state.page = "Health Tips"
-                st.rerun()
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ------------------ Heart Disease Prediction ------------------
+# -----------------------------------------------------------
+# Heart Prediction
+# -----------------------------------------------------------
 def heart_prediction():
-    st.markdown("<div class='card pulse'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#dc3545;'>❤️ Heart Disease Prediction</h2>", unsafe_allow_html=True)
-    st.image("https://images.unsplash.com/photo-1559757175-0eb30cd8c063?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", caption="Heart Health Diagram", use_column_width=True)
-    
-    with st.form("heart_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            age = st.number_input("Age", 1, 120, value=50, help="Patient's age in years")
-            sex = st.selectbox("Sex", ["Male", "Female"])
-            cp = st.slider("Chest Pain Type (0-3)", 0, 3, 0)
-            trestbps = st.slider("Resting Blood Pressure", 80, 200, 120)
-            chol = st.slider("Cholesterol", 100, 600, 200)
-            fbs = st.selectbox("Fasting Blood Sugar > 120 mg/dl", ["No", "Yes"])
-        with col2:
-            restecg = st.slider("Resting ECG (0-2)", 0, 2, 0)
-            thalach = st.slider("Max Heart Rate Achieved", 60, 220, 150)
-            exang = st.selectbox("Exercise Induced Angina", ["No", "Yes"])
-            oldpeak = st.slider("ST Depression", 0.0, 10.0, 0.0)
-            slope = st.slider("Slope (0-2)", 0, 2, 0)
-            ca = st.slider("Number of Major Vessels (0-4)", 0, 4, 0)
-            thal = st.slider("Thal (0-3)", 0, 3, 0)
-        
-        submit = st.form_submit_button("🔍 Predict Heart Disease")
-    
-    if submit:
-        progress = st.progress(0)
-        for i in range(100):
-            progress.progress(i + 1)
-        sex = 1 if sex == "Male" else 0
-        fbs = 1 if fbs == "Yes" else 0
-        exang = 1 if exang == "Yes" else 0
-        input_data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]])
-        scaled = heart_scaler.transform(input_data)
-        pred = heart_model.predict(scaled)
-        
-        # Store and Update
-        if "prediction_history" not in st.session_state:
-            st.session_state.prediction_history = []
-        st.session_state.prediction_history.append({
-            "Type": "Heart", "Prediction": "Disease Detected" if pred[0] == 1 else "No Disease",
-            "Date": datetime.now().strftime("%Y-%m-%d %H:%M")
-        })
-        st.session_state.last_pred = "Heart - " + ("Disease" if pred[0] == 1 else "No Disease")
-        
-        if pred[0] == 0:
-            st.success("✅ No Heart Disease Detected!")
-            st.balloons()
-            st.toast("Great! Keep up the healthy habits!", icon="🎉")
-        else:
-            st.error("⚠️ Heart Disease Detected!")
-            st.toast("Consult a doctor immediately!", icon="⚠️")
-        
-        # Interactive Radar Chart
-        fig = px.line_polar(r={"r": [age/120, chol/600, trestbps/200, thalach/220], "theta": ["Age", "Cholesterol", "BP", "Heart Rate"]}, title="Risk Factors")
-        st.plotly_chart(fig)
-        
-        # Feedback Form
-        with st.expander("Rate This Prediction"):
-            rating = st.slider("How accurate do you think this is?", 1, 5, 3)
-            comment = st.text_area("Comments")
-            if st.button("Submit Feedback"):
-                st.success("Thanks for your feedback!")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.image("assets/heart.jpg", use_column_width=True)
+    st.markdown("<h2 class='title-main'>❤️ Heart Disease Prediction</h2>", unsafe_allow_html=True)
 
-# ------------------ Lung Disease Prediction ------------------
+    with st.container():
+        with st.form("heart_form"):
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                age = st.number_input("Age", 1, 120)
+                sex = st.selectbox("Sex (1=Male, 0=Female)", [1, 0])
+                cp = st.number_input("Chest Pain Type (0-3)", 0, 3)
+                trestbps = st.number_input("Resting BP", 80, 200)
+
+            with col2:
+                chol = st.number_input("Cholesterol", 100, 600)
+                fbs = st.selectbox("Fasting Blood Sugar > 120", [1, 0])
+                restecg = st.number_input("Resting ECG (0-2)", 0, 2)
+                thalach = st.number_input("Max Heart Rate", 60, 220)
+
+            with col3:
+                exang = st.selectbox("Exercise Angina", [1, 0])
+                oldpeak = st.number_input("ST Depression", 0.0, 10.0, step=0.1)
+                slope = st.number_input("Slope (0-2)", 0, 2)
+                ca = st.number_input("Major Vessels (0-4)", 0, 4)
+                thal = st.number_input("Thal (0-3)", 0, 3)
+
+            submit = st.form_submit_button("🔍 Predict Heart Disease")
+
+        if submit:
+            data = np.array([[age, sex, cp, trestbps, chol, fbs, restecg,
+                              thalach, exang, oldpeak, slope, ca, thal]])
+            scaled = heart_scaler.transform(data)
+            pred = heart_model.predict(scaled)
+
+            if pred[0] == 0:
+                st.success("✅ No Heart Disease Detected!")
+            else:
+                st.error("⚠️ Heart Disease Detected!")
+
+# -----------------------------------------------------------
+# Lung Prediction
+# -----------------------------------------------------------
 def lung_prediction():
-    st.markdown("<div class='card pulse'>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align:center; color:#0d6efd;'>🫁 Lung Disease Prediction</h2>", unsafe_allow_html=True)
-    st.image("https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", caption="Lung Health Diagram", use_column_width=True)
-    
+    st.image("assets/lungs.jpg", use_column_width=True)
+    st.markdown("<h2 class='title-main'>🫁 Lung Disease Prediction</h2>", unsafe_allow_html=True)
+
     with st.form("lung_form"):
-        tabs = st.tabs(["Demographics", "Factors", "Symptoms"])
-        with tabs[0]:
-            age = st.slider("Age", 1, 120, 30)
-            gender = st.selectbox("Gender", ["Male", "Female"])
-            smoking = st.selectbox("Smoking", ["No", "Yes"])
-            passive_smoker = st.selectbox("Passive Smoker", ["No", "Yes"])
-        with tabs[1]:
-            air_pollution = st.slider("Air Pollution (0-7)", 0, 7, 3)
-            dust_allergy = st.slider("Dust Allergy (0-7)", 0, 7, 2)
-            occupational_hazards = st.slider("Occupational Hazards (0-7)", 0, 7, 2)
-            genetic_risk = st.slider("Genetic Risk (0-7)", 0, 7, 2)
-            chronic_lung_disease = st.selectbox("Chronic Lung Disease", ["No", "Yes"])
-        with tabs[2]:
-            chest_pain = st.slider("Chest Pain (0-7)", 0, 7, 1)
-            fatigue = st.slider("Fatigue (0-7)", 0, 7, 1)
-            shortness_breath = st.slider("Shortness of Breath (0-7)", 0, 7, 1)
-            wheezing = st.slider("Wheezing (0-7)", 0, 7, 1)
-            level = st.selectbox("Level", ["Low", "Medium", "High"])
-        
+        cols = st.columns(4)
+        fields = [
+            "age","gender","air_pollution","alcohol_use","dust_allergy","occupational_hazards",
+            "genetic_risk","chronic_lung_disease","balanced_diet","obesity","smoking",
+            "passive_smoker","chest_pain","coughing_blood","fatigue","weight_loss",
+            "shortness_breath","wheezing","swallowing","clubbing","cold","dry_cough","snoring"
+        ]
+        values = []
+
+        for i, field in enumerate(fields):
+            with cols[i % 4]:
+                values.append(st.number_input(field.replace("_", " ").title(), 0, 7))
+
+        level = st.selectbox("Level", [2, 1, 0])
+        values.append(level)
+
         submit = st.form_submit_button("🔍 Predict Lung Disease")
-    
-    if submit:
-        progress = st.progress(0)
-        for i in range(100):
-            progress.progress(i + 1)
-        gender = 1 if gender == "Male" else 2
-        smoking = 1 if smoking == "Yes" else 0
-        passive_smoker = 1 if passive_smoker == "Yes" else 0
-        chronic_lung_disease = 1 if chronic_lung_disease == "Yes" else 0
-        level = {"Low": 0, "Medium": 1, "High": 2}[level]
-        input_data = np.array([[age, gender, air_pollution, 1, dust_allergy, occupational_hazards, genetic_risk, chronic_lung_disease,
-                                5, 2]])
+
+        if submit:
+            data = np.array([values])
+            scaled = lung_scaler.transform(data)
+            pred = lung_model.predict(scaled)
+
+            if pred[0] == 0:
+                st.success("✅ No Lung Disease Detected!")
+            else:
+                st.error("⚠️ Lung Disease Detected!")
+
+# -----------------------------------------------------------
+# Main Controller
+# -----------------------------------------------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+if "signup" not in st.session_state:
+    st.session_state.signup = False
+
+if st.session_state.logged_in:
+    st.sidebar.image("assets/banner_health.jpg")
+    st.sidebar.title("🩺 Prediction Menu")
+    menu = st.sidebar.radio("Select Option", ["Heart Disease", "Lung Disease", "Logout"])
+
+    if menu == "Heart Disease":
+        heart_prediction()
+    elif menu == "Lung Disease":
+        lung_prediction()
+    elif menu == "Logout":
+        st.session_state.logged_in = False
+        st.experimental_rerun()
+
+else:
+    if st.session_state.signup:
+        signup_page()
+    else:
+        login_page()

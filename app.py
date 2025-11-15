@@ -143,7 +143,7 @@ st.subheader("Prediction")
 
 model_loaded = False
 try:
-    model = joblib.load("lung_model.pkl")
+    model = joblib.load("lung_model.joblib")
     model_loaded = True
 except:
     st.warning("⚠ Model file not found (lung_model.pkl). Using simple rule-based prediction.")

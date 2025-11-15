@@ -133,7 +133,7 @@ def login_page():
                     "has_lower": bool(re.search(r"[a-z]", pw)),
                     "has_digit": bool(re.search(r"\d", pw)),
                     "has_special": bool(re.search(r"[!@#$%^&*(),.?\":{}|<>\\/~`[\];'-_=+]", pw)),
-                    "len_ok": (4 <= len(pw) <= 8)  # change min length if you want
+                    "len_ok": (4 <= len(pw) > 8)  # change min length if you want
                 }
                 return checks
 
@@ -142,11 +142,11 @@ def login_page():
             # show the rules block
             st.markdown("<div class='rules'>", unsafe_allow_html=True)
             st.markdown("**Password rules:**")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '❌'} Uppercase letter (A-Z)")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '❌'} Lowercase letter (a-z)")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '❌'} Digit (0-9)")
-            st.markdown(f"- {'✅' if checks['has_special'] else '❌'} Special character (e.g. !@#$%)")
-            st.markdown(f"- {'✅' if checks['len_ok'] else '❌'} Length between 4 and 8 characters (max 8)")
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Uppercase letter (A-Z)")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Lowercase letter (a-z)")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Digit (0-9)")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special character (e.g. !@#$%)")
+            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length between 4 and 8 characters (max 8)")
             st.markdown("</div>", unsafe_allow_html=True)
 
             if signup:

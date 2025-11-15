@@ -49,94 +49,151 @@ st.markdown("""
 
 # ------------------ Login System ------------------
 # ------------------ Login + Signup Page (PRO UI) ------------------
+# ----------------- PAGE CONFIG -----------------
+import streamlit as st
+import pandas as pd
+import os
+
+st.set_page_config(page_title="Health & Lungs Portal", page_icon="💓", layout="centered")
+
+# ----------------- CUSTOM CSS -----------------
+st.markdown("""
+<style>
+
+/* Background */
+body, .stApp {
+    background: linear-gradient(135deg, #0f0f11, #1b1c1f);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Title */
+.main-title {
+    font-size: 40px;
+    text-align: center;
+    font-weight: 700;
+    color: #ff4b6e;
+    margin-top: 20px;
+}
+
+/* Subtitle */
+.sub-title {
+    text-align: center;
+    font-size: 18px;
+    color: #cccccc;
+}
+
+/* Centered Card */
+.login-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 30px 40px;
+    border-radius: 16px;
+    width: 430px;
+    margin: auto;
+    margin-top: 20px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0px 0px 20px rgba(255, 75, 110, 0.2);
+    animation: fadein 1.2s ease;
+}
+
+/* Input & Button Tweaks */
+.stTextInput>div>div>input {
+    background-color: rgba(255,255,255,0.08);
+    border-radius: 10px;
+    color: white;
+}
+
+.stButton>button {
+    background: #ff4b6e;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+}
+
+.stButton>button:hover {
+    background: #ff3357;
+}
+
+/* Fade animation */
+@keyframes fadein {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+</style>
+""", unsafe_allow_html=True)
+# ------------------ User Data Handling ------------------
+USER_FILE = "users.csv"
+
+# Create CSV if not exists
+if not os.path.exists(USER_FILE):
+    df = pd.DataFrame(columns=["username", "password"])
+    df.to_csv(USER_FILE, index=False)
+
+
+def save_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    if username in df["username"].values:
+        return False
+
+    df.loc[len(df)] = [username, password]
+    df.to_csv(USER_FILE, index=False)
+    return True
+
+
+def validate_user(username, password):
+    df = pd.read_csv(USER_FILE)
+    return not df[(df["username"] == username) &
+                  (df["password"] == password)].empty
+# ------------------ Login + Signup Page ------------------
 def login_page():
-    st.markdown("""
-        <style>
-        /* Center the login container */
-        .login-container {
-            max-width: 420px;
-            margin: auto;
-            margin-top: 50px;
-            padding: 30px;
-            background: #ffffff;
-            border-radius: 18px;
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.12);
-        }
+    st.markdown("<h1 class='main-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-title'>Your secure health dashboard</p>", unsafe_allow_html=True)
 
-        .login-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 800;
-            color: #d63384;
-        }
+    page = st.radio("", ["Login", "Sign Up"], horizontal=True)
 
-        .login-sub {
-            text-align: center;
-            font-size: 16px;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-
-        .stButton>button {
-            width: 100%;
-            border-radius: 12px;
-            padding: 10px;
-            background-color: #d63384 !important;
-            color: white !important;
-            font-size: 18px;
-            border: none;
-        }
-        .stButton>button:hover {
-            background-color: #b02a6b !important;
-        }
-
-        .radio-label {
-            text-align:center;
-            padding:10px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("<h1 class='login-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='login-sub'>Your secure health prediction dashboard</p>", unsafe_allow_html=True)
-
-    # Centered container card
+    # Container Card
     with st.container():
-        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
+        st.markdown("<div class='login-card'>", unsafe_allow_html=True)
 
-        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True)
-
-        # ---------------- LOGIN ----------------
+        # -------- LOGIN --------
         if page == "Login":
-            st.markdown("<p class='login-sub'>Login to continue</p>", unsafe_allow_html=True)
+            st.markdown("<p class='sub-title'>Login to continue</p>", unsafe_allow_html=True)
 
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            with st.form("login_form"):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                submit = st.form_submit_button("Login")
 
-            if st.button("Login"):
+            if submit:
                 if validate_user(username, password):
                     st.session_state.logged_in = True
-                    st.success("✅ Logged in successfully!")
+                    st.success("✅ Login successful!")
                     st.rerun()
                 else:
-                    st.error("❌ Wrong username or password")
+                    st.error("❌ Invalid username or password")
 
-        # ---------------- SIGN UP ----------------
+        # -------- SIGNUP --------
         else:
-            st.markdown("<p class='login-sub'>Create your account</p>", unsafe_allow_html=True)
+            st.markdown("<p class='sub-title'>Create your new account</p>", unsafe_allow_html=True)
 
-            new_user = st.text_input("Choose Username")
-            new_pass = st.text_input("Choose Password", type="password")
+            with st.form("signup_form"):
+                new_user = st.text_input("Choose Username")
+                new_pass = st.text_input("Choose Password", type="password")
+                signup = st.form_submit_button("Sign Up")
 
-            if st.button("Sign Up"):
+            if signup:
                 if save_user(new_user, new_pass):
-                    st.success("🎉 Account created! You can now login.")
+                    st.success("🎉 Account created! Please login.")
                 else:
-                    st.error("⚠ Username already taken. Try another one.")
+                    st.error("⚠️ Username already exists!")
 
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 # ------------------ Heart Disease Prediction ------------------

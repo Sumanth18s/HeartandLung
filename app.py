@@ -48,145 +48,96 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
-import streamlit as st
-import pandas as pd
-import os
-
-# ------------------ User Data Handling ------------------
-USER_FILE = "users.csv"
-
-# Create file if not exists
-if not os.path.exists(USER_FILE):
-    df = pd.DataFrame(columns=["username", "password"])
-    df.to_csv(USER_FILE, index=False)
-
-
-def save_user(username, password):
-    df = pd.read_csv(USER_FILE)
-    if username in df["username"].values:
-        return False
-    df.loc[len(df)] = [username, password]
-    df.to_csv(USER_FILE, index=False)
-    return True
-
-
-def validate_user(username, password):
-    df = pd.read_csv(USER_FILE)
-    user = df[(df["username"] == username) & (df["password"] == password)]
-    return not user.empty
-
-
-# ------------------ UI + Login Page ------------------
+# ------------------ Login + Signup Page (PRO UI) ------------------
 def login_page():
-
-    # Remove default Streamlit padding
     st.markdown("""
         <style>
-            body, .stApp {
-                background-color: #0b0f19 !important;
-            }
+        /* Center the login container */
+        .login-container {
+            max-width: 420px;
+            margin: auto;
+            margin-top: 50px;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.12);
+        }
 
-            /* center everything */
-            .main-container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 90vh;
-            }
+        .login-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: #d63384;
+        }
 
-            /* Title */
-            .title {
-                font-size: 42px;
-                font-weight: 700;
-                color: #ff4b97;
-                text-align: center;
-                margin-bottom: 5px;
-                text-shadow: 0 0 20px rgba(255, 75, 151, 0.6);
-            }
+        .login-sub {
+            text-align: center;
+            font-size: 16px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
 
-            .subtitle {
-                font-size: 16px;
-                color: #b8b8b8;
-                text-align: center;
-                margin-bottom: 25px;
-            }
+        .stButton>button {
+            width: 100%;
+            border-radius: 12px;
+            padding: 10px;
+            background-color: #d63384 !important;
+            color: white !important;
+            font-size: 18px;
+            border: none;
+        }
+        .stButton>button:hover {
+            background-color: #b02a6b !important;
+        }
 
-            /* Glass card */
-            .glass-card {
-                background: rgba(255, 255, 255, 0.05);
-                padding: 30px;
-                width: 400px;
-                border-radius: 15px;
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            }
-
-            /* Radio button row */
-            .radio-row .stRadio > div {
-                display: flex;
-                justify-content: center;
-                gap: 20px;
-            }
-
-            /* Buttons */
-            .stButton button {
-                width: 100%;
-                border-radius: 8px;
-                height: 45px;
-                background: #ff4b97 !important;
-                color: white;
-                font-size: 16px;
-                border: none;
-            }
+        .radio-label {
+            text-align:center;
+            padding:10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    # Center alignment using container
-    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
+    st.markdown("<h1 class='login-title'>💓 Health & Lungs Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='login-sub'>Your secure health prediction dashboard</p>", unsafe_allow_html=True)
 
-    st.markdown("<div class='title'>💓 Health & Lungs Portal</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitle'>Your secure health prediction dashboard</div>", unsafe_allow_html=True)
-
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-
-    # Login / Signup radio
+    # Centered container card
     with st.container():
-        st.markdown("<div class='radio-row'>", unsafe_allow_html=True)
-        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True, label_visibility="collapsed")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-container'>", unsafe_allow_html=True)
 
-    # -------- LOGIN --------
-    if page == "Login":
-        with st.form("login_form"):
+        page = st.radio(" ", ["Login", "Sign Up"], horizontal=True)
+
+        # ---------------- LOGIN ----------------
+        if page == "Login":
+            st.markdown("<p class='login-sub'>Login to continue</p>", unsafe_allow_html=True)
+
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
-            submit = st.form_submit_button("Login")
 
-        if submit:
-            if validate_user(username, password):
-                st.session_state.logged_in = True
-                st.success("✅ Login successful!")
-                st.rerun()
-            else:
-                st.error("❌ Invalid username or password")
+            if st.button("Login"):
+                if validate_user(username, password):
+                    st.session_state.logged_in = True
+                    st.success("✅ Logged in successfully!")
+                    st.rerun()
+                else:
+                    st.error("❌ Wrong username or password")
 
-    # -------- SIGNUP --------
-    else:
-        with st.form("signup_form"):
+        # ---------------- SIGN UP ----------------
+        else:
+            st.markdown("<p class='login-sub'>Create your account</p>", unsafe_allow_html=True)
+
             new_user = st.text_input("Choose Username")
             new_pass = st.text_input("Choose Password", type="password")
-            signup = st.form_submit_button("Sign Up")
 
-        if signup:
-            if save_user(new_user, new_pass):
-                st.success("🎉 Account created successfully! Now login.")
-            else:
-                st.error("⚠️ Username already exists. Try another one.")
+            if st.button("Sign Up"):
+                if save_user(new_user, new_pass):
+                    st.success("🎉 Account created! You can now login.")
+                else:
+                    st.error("⚠ Username already taken. Try another one.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

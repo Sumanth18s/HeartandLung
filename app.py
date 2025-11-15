@@ -53,7 +53,7 @@ import pandas as pd
 import os
 import re
 
-# ------------------ USER DATA FILE ------------------
+# ------------------ User Data Handling ------------------
 USER_FILE = "users.csv"
 
 # Create file if not exists
@@ -79,7 +79,7 @@ def validate_user(username, password):
     return not user.empty
 
 
-# ------------------ PASSWORD CHECK ------------------
+# ------------------ Password Rule Check ------------------
 def check_password_rules(pw):
     return {
         "has_upper": bool(re.search(r"[A-Z]", pw)),
@@ -90,13 +90,13 @@ def check_password_rules(pw):
     }
 
 
-# ------------------ LOGIN PAGE ------------------
+# ------------------ Login + Signup Page ------------------
 def login_page():
 
-    # ----------- CSS -----------
+    # ---- UI CARD CENTRE ----
     st.markdown("""
         <style>
-        .center-card {
+        .card {
             max-width: 420px;
             margin: auto;
             padding: 25px;
@@ -110,7 +110,6 @@ def login_page():
             color:#d63384;
             font-size: 34px;
             font-weight: bold;
-            margin-bottom: 10px;
         }
         .sub {
             text-align:center;
@@ -123,19 +122,18 @@ def login_page():
             border-radius:12px;
             margin-top:10px;
             border-left:4px solid #d63384;
-            font-size: 15px;
         }
         </style>
     """, unsafe_allow_html=True)
 
+    # ---- MAIN HEADING ----
     st.markdown("<h1 class='title-main'>💓 Health & Lungs Prediction</h1>", unsafe_allow_html=True)
 
-    # ----------- MAIN CARD -----------
-    st.markdown("<div class='center-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
 
     page = st.radio("Select Option", ["Login", "Sign Up"])
 
-    # ----------- LOGIN -----------
+    # -------- LOGIN --------
     if page == "Login":
         st.markdown("<p class='sub'>Login to your account</p>", unsafe_allow_html=True)
 
@@ -152,7 +150,7 @@ def login_page():
             else:
                 st.error("❌ Invalid username or password")
 
-    # ----------- SIGNUP -----------
+    # -------- SIGNUP --------
     else:
         st.markdown("<p class='sub'>Create your new account</p>", unsafe_allow_html=True)
 
@@ -162,13 +160,12 @@ def login_page():
 
             checks = check_password_rules(new_pass)
 
-            # -------- Password Rules --------
             st.markdown("<div class='rules'>", unsafe_allow_html=True)
             st.markdown("### Password Rules")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase (A–Z)**")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase (a–z)**")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit (0–9)**")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special (!@#$%^&*)**")
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase(A-Z)**")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase(a-z)**")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit(0-9)**")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special char(!@#$%)**")
             st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length **4–12 characters**")
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -176,18 +173,14 @@ def login_page():
 
         if signup:
             if not all(checks.values()):
-                st.error("❌ Password does NOT meet rules.")
+                st.error("❌ Password does NOT meet all the rules.")
             else:
                 if save_user(new_user, new_pass):
-                    st.success("🎉 Account created! Please login.")
+                    st.success("🎉 Account created successfully! Now login.")
                 else:
-                    st.error("⚠️ Username already exists.")
+                    st.error("⚠️ Username already exists. Try another one.")
 
-    st.markdown("</div>", unsafe_allow_html=True)  # Close card
-
-
-# Run Page
-login_page()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

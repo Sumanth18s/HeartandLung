@@ -102,7 +102,7 @@ def lung_prediction():
     age = st.number_input("Age", 1, 120)
     gender = st.selectbox("Gender", [1, 2])
     air_pollution = st.slider("Air Pollution", 0, 7)
-    alcohol = st.slider("Alcohol Use", 0, 7)
+    alcohol_use = st.slider("Alcohol Use", 0, 7)
     dust_allergy = st.slider("Dust Allergy", 0, 7)
     occup_hazard = st.slider("Occupational Hazards", 0, 7)
     genetic_risk = st.slider("Genetic Risk", 0, 7)

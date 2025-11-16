@@ -203,7 +203,7 @@ def lung_prediction():
     st.write("### Enter Patient Details:")
 
     age = st.number_input("Age", min_value=1, max_value=120, value=30)
-    gender = st.number_input("Gender (1=Male, 0=Female)", min_value=1, max_value=2, value=1)
+    gender = st.selectbox("Sex (1=Male, 0=Female)", [1, 0])
     air_pollution = st.number_input("Air Pollution (0-7)", min_value=0, max_value=7, value=3)
     alcohol_use = st.number_input("Alcohol Use (0-7)", min_value=0, max_value=7, value=1)
     dust_allergy = st.number_input("Dust Allergy (0-7)", min_value=0, max_value=7, value=2)

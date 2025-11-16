@@ -54,28 +54,32 @@ import os
 import re
 from pathlib import Path
 
-# ------------------ File path (stable) ------------------
-def get_user_file_path(filename="users.csv"):
+# ------------------------------------------
+# FIXED: USERS.CSV ALWAYS STORED CONSISTENTLY
+# ------------------------------------------
+def get_user_file():
     try:
         base = Path(__file__).resolve().parent
-    except NameError:
+    except:
         base = Path.cwd()
-    return str(base / filename)
+    return str(base / "users.csv")
 
-USER_FILE = get_user_file_path("users.csv")
+USER_FILE = get_user_file()
 
-# Create file if not exists
+# Create CSV if it doesn't exist
 if not os.path.exists(USER_FILE):
-    df_init = pd.DataFrame(columns=["username", "password"])
-    df_init.to_csv(USER_FILE, index=False)
+    pd.DataFrame(columns=["username", "password"]).to_csv(USER_FILE, index=False)
 
-# ------------------ Utility functions ------------------
+
+# ------------------------------------------
+# USER FUNCTIONS
+# ------------------------------------------
 def read_users():
     try:
-        df = pd.read_csv(USER_FILE, dtype=str).fillna("")
+        return pd.read_csv(USER_FILE, dtype=str).fillna("")
     except:
-        df = pd.DataFrame(columns=["username", "password"])
-    return df
+        return pd.DataFrame(columns=["username", "password"])
+
 
 def save_user(username, password):
     username = username.strip()
@@ -83,25 +87,28 @@ def save_user(username, password):
 
     if username == "":
         return False
-
     if username in df["username"].values:
         return False
 
-    new_row = pd.DataFrame([[username, password]], columns=["username", "password"])
-    df = pd.concat([df, new_row], ignore_index=True)
+    df.loc[len(df)] = [username, password]
     df.to_csv(USER_FILE, index=False)
     return True
 
+
 def validate_user(username, password):
-    df = read_users()
     username = username.strip()
-    user_match = df[
+    df = read_users()
+
+    row = df[
         (df["username"].astype(str).str.strip() == username) &
         (df["password"].astype(str) == password)
     ]
-    return not user_match.empty
+    return not row.empty
 
-# ------------------ Password Rule Check ------------------
+
+# ------------------------------------------
+# PASSWORD RULES
+# ------------------------------------------
 def check_password_rules(pw):
     pw = str(pw)
     return {
@@ -112,9 +119,13 @@ def check_password_rules(pw):
         "len_ok": 4 <= len(pw) <= 12
     }
 
-# ------------------ App ------------------
+
+# ------------------------------------------
+# LOGIN + SIGNUP UI
+# ------------------------------------------
 def login_page():
 
+    # Initialize session state
     if "logged_in" not in st.session_state:
         st.session_state.logged_in = False
     if "username" not in st.session_state:
@@ -136,9 +147,9 @@ def login_page():
         .card {
             max-width:700px;
             margin:auto;
-            padding:18px;
+            padding:20px;
             border-radius:8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            box-shadow:0 4px 10px rgba(0,0,0,0.05);
         }
         </style>
     """, unsafe_allow_html=True)
@@ -146,12 +157,12 @@ def login_page():
     st.markdown("<h1 class='title-main'>💓 Health & Lungs Prediction</h1>", unsafe_allow_html=True)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-    # ---- Logged In View ----
+    # ------------------------------------------
+    # USER ALREADY LOGGED IN
+    # ------------------------------------------
     if st.session_state.logged_in:
-        st.success(f"Logged in as: {st.session_state.username}")
-        st.write("Welcome! You can now access the app features.")
-
-        if st.button("Logout", key="logout_btn"):
+        st.success(f"Logged in as: **{st.session_state.username}**")
+        if st.button("Logout"):
             st.session_state.logged_in = False
             st.session_state.username = ""
             st.rerun()
@@ -159,20 +170,21 @@ def login_page():
         st.markdown("</div>", unsafe_allow_html=True)
         return
 
-    # -------- LOGIN / SIGNUP SELECTOR --------
-    page = st.radio(
-        "Select Option",
-        ["Login", "Sign Up"],
-        key="login_signup_selector"
-    )
+    # ------------------------------------------
+    # LOGIN / SIGN UP SWITCH
+    # (NO KEYS HERE → NO DUPLICATE ERROR)
+    # ------------------------------------------
+    page = st.radio("Select Option", ["Login", "Sign Up"])
 
-    # -------- LOGIN --------
+    # ------------------------------------------
+    # LOGIN
+    # ------------------------------------------
     if page == "Login":
         st.markdown("<p class='sub'>Login to your account</p>", unsafe_allow_html=True)
 
         with st.form("login_form"):
-            username = st.text_input("Username", key="login_user")
-            password = st.text_input("Password", type="password", key="login_pass")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
             submit = st.form_submit_button("Login")
 
         if submit:
@@ -181,27 +193,29 @@ def login_page():
             elif validate_user(username, password):
                 st.session_state.logged_in = True
                 st.session_state.username = username
-                st.success("Login successful!")
+                st.success("Login Successful!")
                 st.rerun()
             else:
                 st.error("Invalid username or password.")
 
-    # -------- SIGNUP --------
+    # ------------------------------------------
+    # SIGN UP
+    # ------------------------------------------
     else:
         st.markdown("<p class='sub'>Create your new account</p>", unsafe_allow_html=True)
 
         with st.form("signup_form"):
-            new_user = st.text_input("Choose Username", key="signup_user")
-            new_pass = st.text_input("Choose Password", type="password", key="signup_pass")
+            new_user = st.text_input("Choose Username")
+            new_pass = st.text_input("Choose Password", type="password")
 
             checks = check_password_rules(new_pass)
 
             st.markdown("### Password Rules")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase (A-Z)**")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase (a-z)**")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit (0-9)**")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special (!@#$%)**")
-            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length **4–12 characters**")
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Uppercase (A-Z)")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Lowercase (a-z)")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Digit (0-9)")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special (!@#$%)")
+            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length 4–12")
 
             signup = st.form_submit_button("Sign Up")
 
@@ -211,20 +225,20 @@ def login_page():
             if new_user.strip() == "":
                 st.error("Please enter a username.")
             elif not all(checks.values()):
-                st.error("Password does not meet all rules.")
+                st.error("Password does NOT meet all the rules.")
+            elif save_user(new_user, new_pass):
+                st.success("Account created successfully! Please login.")
             else:
-                if save_user(new_user, new_pass):
-                    st.success("Account created successfully! Please login.")
-                else:
-                    st.error("Username already exists. Try another one.")
+                st.error("Username already exists. Try another one.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ------------------ RUN APP ------------------
+
+# ------------------------------------------
+# RUN APP
+# ------------------------------------------
 if __name__ == "__main__":
     login_page()
-
-
 
 
 # ------------------ Heart Disease Prediction ------------------

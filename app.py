@@ -50,50 +50,49 @@ st.markdown("""
 # ------------------ Login System ------------------
 import streamlit as st
 import pandas as pd
-import os
 import re
 
-# ------------------ User Data Handling ------------------
-USER_FILE = "users.csv"
+# ------------------ Persistent Storage ------------------
+# This stores data permanently across app restarts
+def load_users():
+    users = st.experimental_storage.get("user_db")
+    return users if users else {}
 
-# Create file if not exists
-if not os.path.exists(USER_FILE):
-    df = pd.DataFrame(columns=["username", "password"])
-    df.to_csv(USER_FILE, index=False)
+def save_users(users_dict):
+    st.experimental_storage.set("user_db", users_dict)
 
 
+# ------------------ User Operations ------------------
 def save_user(username, password):
-    df = pd.read_csv(USER_FILE)
+    users = load_users()
 
-    if username in df["username"].values:
+    if username in users:
         return False
 
-    df.loc[len(df)] = [username, password]
-    df.to_csv(USER_FILE, index=False)
+    users[username] = password
+    save_users(users)
     return True
 
 
 def validate_user(username, password):
-    df = pd.read_csv(USER_FILE)
-    user = df[(df["username"] == username) & (df["password"] == password)]
-    return not user.empty
+    users = load_users()
+    return users.get(username) == password
 
 
-# ------------------ Password Rule Check ------------------
+# ------------------ Password Rules Check ------------------
 def check_password_rules(pw):
     return {
         "has_upper": bool(re.search(r"[A-Z]", pw)),
         "has_lower": bool(re.search(r"[a-z]", pw)),
         "has_digit": bool(re.search(r"[0-9]", pw)),
-        "has_special": bool(re.search(r"[!@#$%^&*()_+=\-]", pw)),
+        "has_special": bool(re.search(r"[!@#$%^&*()_+=\\-]", pw)),
         "len_ok": 4 <= len(pw) <= 12
     }
 
 
-# ------------------ Login + Signup Page ------------------
+# ------------------ LOGIN + SIGNUP PAGE ------------------
 def login_page():
 
-    # ---- UI CARD CENTRE ----
     st.markdown("""
         <style>
         .title-main {
@@ -107,18 +106,14 @@ def login_page():
             color:#6c757d;
             font-size: 18px;
         }
-        
         </style>
     """, unsafe_allow_html=True)
 
-    # ---- MAIN HEADING ----
     st.markdown("<h1 class='title-main'>💓 Health & Lungs Prediction</h1>", unsafe_allow_html=True)
-
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
 
     page = st.radio("Select Option", ["Login", "Sign Up"])
 
-    # -------- LOGIN --------
+    # ---------------- LOGIN ----------------
     if page == "Login":
         st.markdown("<p class='sub'>Login to your account</p>", unsafe_allow_html=True)
 
@@ -135,7 +130,7 @@ def login_page():
             else:
                 st.error("❌ Invalid username or password")
 
-    # -------- SIGNUP --------
+    # ---------------- SIGN UP ----------------
     else:
         st.markdown("<p class='sub'>Create your new account</p>", unsafe_allow_html=True)
 
@@ -145,27 +140,37 @@ def login_page():
 
             checks = check_password_rules(new_pass)
 
-            st.markdown("<div class='rules'>", unsafe_allow_html=True)
             st.markdown("### Password Rules")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase(A-Z)**")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase(a-z)**")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit(0-9)**")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special char(!@#$%)**")
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase (A-Z)**")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase (a-z)**")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit (0-9)**")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special char (!@#$%)**")
             st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length **4–12 characters**")
-            st.markdown("</div>", unsafe_allow_html=True)
 
             signup = st.form_submit_button("Sign Up")
 
         if signup:
             if not all(checks.values()):
-                st.error("❌ Password does NOT meet all the rules.")
+                st.error("❌ Password does NOT meet all rules.")
             else:
                 if save_user(new_user, new_pass):
                     st.success("🎉 Account created successfully! Now login.")
                 else:
-                    st.error("⚠️ Username already exists. Try another one.")
+                    st.error("⚠ Username already exists. Try another one.")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+
+# ------------------ APP MAIN ------------------
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    login_page()
+else:
+    st.success("🎉 You are logged in!")
+    st.write("Place your main app here...")
+    if st.button("Logout"):
+        st.session_state.logged_in = False
+        st.rerun()
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

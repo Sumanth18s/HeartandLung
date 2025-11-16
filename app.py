@@ -226,6 +226,7 @@ if __name__ == "__main__":
 
 
 
+
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():
     st.markdown("<h2 style='text-align:center;color:#dc3545;'>❤️ Heart Disease Prediction</h2>", unsafe_allow_html=True)

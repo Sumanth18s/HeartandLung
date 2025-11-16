@@ -96,15 +96,6 @@ def login_page():
     # ---- UI CARD CENTRE ----
     st.markdown("""
         <style>
-        .card {
-            max-width: 420px;
-            margin: auto;
-            padding: 25px;
-            background: #ffffff;
-            border-radius: 18px;
-            box-shadow: 0px 4px 20px rgba(0,0,0,0.12);
-            margin-top: 20px;
-        }
         .title-main {
             text-align:center;
             color:#d63384;

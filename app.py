@@ -147,7 +147,7 @@ def login_page():
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<h1 class='title-main'>💓 Health & Lungs Prediction</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title-main'>💓 Heart & Lungs Prediction</h1>", unsafe_allow_html=True)
     st.markdown("<div class='card'>", unsafe_allow_html=True)
 
     # ------------------------------------------

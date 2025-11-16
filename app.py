@@ -107,13 +107,7 @@ def login_page():
             color:#6c757d;
             font-size: 18px;
         }
-        .rules {
-            background:#f8f9fa;
-            padding:15px;
-            border-radius:12px;
-            margin-top:10px;
-            border-left:4px solid #d63384;
-        }
+        
         </style>
     """, unsafe_allow_html=True)
 

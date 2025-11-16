@@ -49,17 +49,27 @@ st.markdown("""
 
 # ------------------ Login System ------------------
 import streamlit as st
-import pandas as pd
+import os
+import json
 import re
 
-# ------------------ Persistent Storage ------------------
-# This stores data permanently across app restarts
-def load_users():
-    users = st.experimental_storage.get("user_db")
-    return users if users else {}
+# ------------------ Persistent User Storage ------------------
+USER_FILE = "users.json"
 
-def save_users(users_dict):
-    st.experimental_storage.set("user_db", users_dict)
+# Create file if not exists (only once)
+if not os.path.exists(USER_FILE):
+    with open(USER_FILE, "w") as f:
+        json.dump({}, f)
+
+
+def load_users():
+    with open(USER_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_users(data):
+    with open(USER_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
 
 # ------------------ User Operations ------------------
@@ -141,11 +151,11 @@ def login_page():
             checks = check_password_rules(new_pass)
 
             st.markdown("### Password Rules")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase (A-Z)**")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase (a-z)**")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit (0-9)**")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special char (!@#$%)**")
-            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length **4–12 characters**")
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Uppercase (A-Z)")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Lowercase (a-z)")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Digit (0-9)")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special char (!@#$%)")
+            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length 4–12 characters")
 
             signup = st.form_submit_button("Sign Up")
 
@@ -167,10 +177,12 @@ if not st.session_state.logged_in:
     login_page()
 else:
     st.success("🎉 You are logged in!")
-    st.write("Place your main app here...")
+    st.write("Your main application starts here...")
+
     if st.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
+
 
 # ------------------ Heart Disease Prediction ------------------
 def heart_prediction():

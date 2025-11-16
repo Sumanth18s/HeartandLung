@@ -48,62 +48,89 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Login System ------------------
+# streamlit_app.py
 import streamlit as st
+import pandas as pd
 import os
-import json
 import re
+from pathlib import Path
 
-# ------------------ Persistent User Storage ------------------
-USER_FILE = "users.json"
+# ------------------ File path (stable) ------------------
+def get_user_file_path(filename="users.csv"):
+    # Prefer same folder as this file if available, otherwise use current working dir
+    try:
+        base = Path(__file__).resolve().parent
+    except NameError:
+        base = Path.cwd()
+    base.mkdir(parents=True, exist_ok=True)
+    return str(base / filename)
 
-# Create file if not exists (only once)
+USER_FILE = get_user_file_path("users.csv")
+
+# Create file if not exists
 if not os.path.exists(USER_FILE):
-    with open(USER_FILE, "w") as f:
-        json.dump({}, f)
+    df_init = pd.DataFrame(columns=["username", "password"])
+    df_init.to_csv(USER_FILE, index=False)
 
+# ------------------ Utility functions ------------------
+def read_users():
+    # Always read as strings and fill NA with empty strings
+    df = pd.read_csv(USER_FILE, dtype=str).fillna("")
+    # Ensure columns exist
+    if "username" not in df.columns or "password" not in df.columns:
+        df = pd.DataFrame(columns=["username", "password"])
+    return df
 
-def load_users():
-    with open(USER_FILE, "r") as f:
-        return json.load(f)
-
-
-def save_users(data):
-    with open(USER_FILE, "w") as f:
-        json.dump(data, f, indent=4)
-
-
-# ------------------ User Operations ------------------
 def save_user(username, password):
-    users = load_users()
+    username = str(username).strip()
+    password = str(password)
+    df = read_users()
 
-    if username in users:
+    # protect against empty username
+    if username == "":
         return False
 
-    users[username] = password
-    save_users(users)
+    # check exists (case-sensitive)
+    if username in df["username"].astype(str).str.strip().values:
+        return False
+
+    new_row = pd.DataFrame([[username, password]], columns=["username", "password"])
+    df = pd.concat([df, new_row], ignore_index=True)
+    df.to_csv(USER_FILE, index=False)
     return True
 
-
 def validate_user(username, password):
-    users = load_users()
-    return users.get(username) == password
+    username = str(username).strip()
+    password = str(password)
+    df = read_users()
+    # compare stripped username to avoid accidental whitespace mismatch
+    matches = df[
+        (df["username"].astype(str).str.strip() == username) &
+        (df["password"].astype(str) == password)
+    ]
+    return not matches.empty
 
-
-# ------------------ Password Rules Check ------------------
+# ------------------ Password Rule Check ------------------
 def check_password_rules(pw):
+    pw = str(pw)
     return {
         "has_upper": bool(re.search(r"[A-Z]", pw)),
         "has_lower": bool(re.search(r"[a-z]", pw)),
         "has_digit": bool(re.search(r"[0-9]", pw)),
-        "has_special": bool(re.search(r"[!@#$%^&*()_+=\\-]", pw)),
+        "has_special": bool(re.search(r"[!@#$%^&*()_+=\-]", pw)),
         "len_ok": 4 <= len(pw) <= 12
     }
 
-
-# ------------------ LOGIN + SIGNUP PAGE ------------------
+# ------------------ Streamlit app ------------------
 def login_page():
+    # initialize session state keys
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+    if "username" not in st.session_state:
+        st.session_state.username = ""
 
-    st.markdown("""
+    st.markdown(
+        """
         <style>
         .title-main {
             text-align:center;
@@ -116,14 +143,35 @@ def login_page():
             color:#6c757d;
             font-size: 18px;
         }
+        .card {
+            max-width:700px;
+            margin:auto;
+            padding:18px;
+            border-radius:8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
         </style>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("<h1 class='title-main'>💓 Health & Lungs Prediction</h1>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+
+    # if logged in show simple dashboard
+    if st.session_state.logged_in:
+        st.success(f"✅ Logged in as: {st.session_state.username}")
+        st.write("Welcome — you can now access the Health & Lungs Prediction features.")
+        if st.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.username = ""
+            st.experimental_rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
 
     page = st.radio("Select Option", ["Login", "Sign Up"])
 
-    # ---------------- LOGIN ----------------
+    # -------- LOGIN --------
     if page == "Login":
         st.markdown("<p class='sub'>Login to your account</p>", unsafe_allow_html=True)
 
@@ -133,14 +181,17 @@ def login_page():
             submit = st.form_submit_button("Login")
 
         if submit:
-            if validate_user(username, password):
+            if username.strip() == "" or password == "":
+                st.error("Please enter both username and password.")
+            elif validate_user(username, password):
                 st.session_state.logged_in = True
+                st.session_state.username = username.strip()
                 st.success("✅ Login successful!")
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error("❌ Invalid username or password")
 
-    # ---------------- SIGN UP ----------------
+    # -------- SIGNUP --------
     else:
         st.markdown("<p class='sub'>Create your new account</p>", unsafe_allow_html=True)
 
@@ -148,40 +199,34 @@ def login_page():
             new_user = st.text_input("Choose Username")
             new_pass = st.text_input("Choose Password", type="password")
 
+            # show rules live (based on current input)
             checks = check_password_rules(new_pass)
-
             st.markdown("### Password Rules")
-            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Uppercase (A-Z)")
-            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Lowercase (a-z)")
-            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Digit (0-9)")
-            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Special char (!@#$%)")
-            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length 4–12 characters")
-
+            st.markdown(f"- {'✅' if checks['has_upper'] else '⏩'} Must contain **Uppercase (A-Z)**")
+            st.markdown(f"- {'✅' if checks['has_lower'] else '⏩'} Must contain **Lowercase (a-z)**")
+            st.markdown(f"- {'✅' if checks['has_digit'] else '⏩'} Must contain **Digit (0-9)**")
+            st.markdown(f"- {'✅' if checks['has_special'] else '⏩'} Must contain **Special char (!@#$%)**")
+            st.markdown(f"- {'✅' if checks['len_ok'] else '⏩'} Length **4–12 characters**")
             signup = st.form_submit_button("Sign Up")
 
         if signup:
-            if not all(checks.values()):
-                st.error("❌ Password does NOT meet all rules.")
+            # re-evaluate rules at submit time to be safe
+            checks = check_password_rules(new_pass)
+            if new_user.strip() == "":
+                st.error("Please enter a username.")
+            elif not all(checks.values()):
+                st.error("❌ Password does NOT meet all the rules.")
             else:
-                if save_user(new_user, new_pass):
+                ok = save_user(new_user, new_pass)
+                if ok:
                     st.success("🎉 Account created successfully! Now login.")
                 else:
-                    st.error("⚠ Username already exists. Try another one.")
+                    st.error("⚠️ Username already exists or invalid. Try another one.")
 
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# ------------------ APP MAIN ------------------
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
+if __name__ == "__main__":
     login_page()
-else:
-    st.success("🎉 You are logged in!")
-    st.write("Your main application starts here...")
-
-    if st.button("Logout"):
-        st.session_state.logged_in = False
-        st.rerun()
 
 
 # ------------------ Heart Disease Prediction ------------------
